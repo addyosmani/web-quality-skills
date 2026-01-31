@@ -35,6 +35,22 @@ add-skill is a powerful CLI tool that lets you install agent skills onto your co
 npx skills add addyosmani/web-quality-skills
 ```
 
+or use skillkit to install skills across multiple AI agents:
+
+```bash
+# Install all skills
+npx skillkit install addyosmani/web-quality-skills
+
+# Translate from one agent to another
+npx skillkit agent translate
+
+# Install specific skills
+npx skillkit install addyosmani/web-quality-skills --skill accessibility
+
+# List available skills without installing
+npx skillkit install addyosmani/web-quality-skills --list
+```
+
 or
 
 ```
