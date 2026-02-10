@@ -41,14 +41,17 @@ or use skillkit to install skills across multiple AI agents:
 # Install all skills
 npx skillkit install addyosmani/web-quality-skills
 
-# Translate from one agent to another
-npx skillkit agent translate
-
 # Install specific skills
 npx skillkit install addyosmani/web-quality-skills --skill accessibility
 
 # List available skills without installing
 npx skillkit install addyosmani/web-quality-skills --list
+```
+
+Once installed, translate skills to any supported agent:
+
+```bash
+npx skillkit agent translate --from claude-code --to cursor
 ```
 
 or
