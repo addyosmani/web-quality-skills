@@ -29,7 +29,12 @@ While interface guidelines tell you *what* to build, Web Quality Skills tell you
 
 ### Installation
 
-add-skill is a powerful CLI tool that lets you install agent skills onto your coding agents from git repositories. Whether you're using OpenCode, Claude Code, Codex, or Cursor, the add-skill tool makes it simple to extend your agent's capabilities with specialized instruction sets. Use add-skill to automate release notes, create pull requests, integrate with external tools, and more. Simply run npx add-skill to get started.
+add-skill is a powerful CLI tool that lets you install agent skills onto your
+coding agents from git repositories. Whether you're using OpenCode, Claude Code,
+Codex, Cursor, or Autohand Code, the add-skill tool makes it simple to extend
+your agent's capabilities with specialized instruction sets. Use add-skill to
+automate release notes, create pull requests, integrate with external tools, and
+more. Simply run npx add-skill to get started.
 
 ```bash
 npx skills add addyosmani/web-quality-skills
@@ -46,6 +51,28 @@ Or manually:
 ```bash
 cp -r skills/* ~/.claude/skills/
 ```
+
+#### Autohand Code
+
+Install all skills globally:
+
+```bash
+git clone https://github.com/addyosmani/web-quality-skills.git
+mkdir -p ~/.autohand/skills
+cp -R web-quality-skills/skills/* ~/.autohand/skills/
+```
+
+Install into the current project:
+
+```bash
+git clone https://github.com/addyosmani/web-quality-skills.git
+mkdir -p .autohand/skills
+cp -R web-quality-skills/skills/* .autohand/skills/
+```
+
+If these skills are later published to an Autohand Skills index, install a
+cataloged skill with `autohand --skill-install <skill-name>`, or add `--project`
+to install it into the current project.
 
 #### Claude Code (plugin)
 
