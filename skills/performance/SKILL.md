@@ -20,7 +20,7 @@ Evidence-led performance optimization using real-user signals for prioritization
 
 When no runnable page exists, perform static inspection but call findings **hypotheses**, not measured regressions. Include the command or browser workflow that can verify each high-impact hypothesis.
 
-Chrome DevTools MCP is the preferred path when its tools are available: use `performance_start_trace` for performance and Core Web Vitals, not `lighthouse_audit`. The latter currently covers Accessibility, SEO, Best Practices, and Agentic Browsing and deliberately excludes performance.
+Prefer a browser tool that records a performance trace and exposes focused insights. With Chrome DevTools MCP, use `performance_start_trace` and `performance_analyze_insight`; do not route performance through `lighthouse_audit`, which covers non-performance Lighthouse categories.
 
 ## Starting performance budget
 
@@ -28,7 +28,7 @@ Budgets must reflect the product's target devices, networks, page types, and use
 
 | Resource | Budget | Rationale |
 |----------|--------|-----------|
-| Total page weight | < 1.5 MB | Starting transfer guardrail |
+| Total page weight | < 1.5 MB | Bounds transfer time and data cost on constrained target networks; calibrate with representative pages |
 | JavaScript (compressed) | < 300 KB | Protect parse and execution cost |
 | CSS (compressed) | < 100 KB | Limit render-blocking work |
 | Images (above-fold) | < 500 KB | Protect likely LCP resources |
@@ -42,7 +42,7 @@ Budgets must reflect the product's target devices, networks, page types, and use
 * **Enable compression.** Gzip or Brotli for text assets. Brotli preferred (15-20% smaller).
 * **HTTP/2 or HTTP/3.** Multiplexing reduces connection overhead.
 * **Edge caching.** Cache HTML at CDN edge when possible.
-* **Consider Early Hints (HTTP 103) for measured document latency.** If a trace shows slow HTML generation and stable critical subresources, Early Hints can let the browser start those requests before the final response. Limit hints to resources proven to be critical and measure the result; inaccurate hints waste bandwidth and can compete with the actual LCP resource.
+* **Consider Early Hints (HTTP 103) for measured document latency.** If a trace shows slow HTML generation and stable critical subresources, send an interim `103` with `Link` headers before the normal final response from the same request. Use HTTP/2 or later. A CDN may synthesize the `103` from `Link` headers on an earlier `200`, or the origin/edge handler can emit it directly. Unsupported clients continue to the final response, but confirm current browser and infrastructure support. Limit hints to proven critical preloads or preconnects: inaccurate hints waste bandwidth. Cloudflare reported a 20–30% LCP improvement in an artificial, image-heavy test; treat that as a vendor case study, not an expected saving, and measure your result. See [MDN's 103 implementation example](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/103) and [the Cloudflare study](https://blog.cloudflare.com/early-hints-performance/).
 
 ### Resource loading
 

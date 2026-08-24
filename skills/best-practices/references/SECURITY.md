@@ -75,7 +75,12 @@ element.innerHTML = userInput;
 element.innerHTML = escape.createHTML(userInput);
 ```
 
-Roll out with `Content-Security-Policy-Report-Only` first to find every sink usage, then flip to enforcement. Keep the sanitizer current and verify framework-specific integration against its maintained documentation.
+Roll out with `Content-Security-Policy-Report-Only` first to find every sink usage, then flip to enforcement. Keep the sanitizer current.
+
+Framework integration is not interchangeable:
+
+* **Angular** documents built-in sanitization plus the `angular` Trusted Types policy required for enforcement; lazy loading, JIT, upgrades, and explicit sanitizer bypasses need additional named policies. Follow [Angular's maintained security guide](https://angular.dev/best-practices/security#enforcing-trusted-types).
+* **React** does not sanitize `dangerouslySetInnerHTML`. Keep untrusted input out of it or pass content sanitized by an application-owned policy, and verify the deployed React version under report-only enforcement. Do not assume the framework creates `TrustedHTML`; see [React's security warning](https://react.dev/reference/react-dom/components/common#dangerously-setting-the-inner-html).
 
 ## Subresource Integrity (SRI) for third-party scripts
 

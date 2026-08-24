@@ -27,13 +27,13 @@ Use the best capability already available; do not block the audit on optional se
 
 | Need | Preferred route | Fallback |
 |------|-----------------|----------|
-| Performance and Core Web Vitals | Chrome DevTools MCP `performance_start_trace`, then focused `performance_analyze_insight` calls | Lighthouse CLI or PageSpeed Insights lab data |
+| Performance and Core Web Vitals | Record a browser performance trace and analyze focused insights; with Chrome DevTools MCP, use `performance_start_trace` then `performance_analyze_insight` | Lighthouse CLI or PageSpeed Insights lab data |
 | Real-user performance | CrUX values included in current DevTools trace summaries | PageSpeed Insights/CrUX Vis; direct CrUX API only when a key is already available or automation is requested |
-| Accessibility, SEO, Best Practices, Agentic Browsing | Chrome DevTools MCP `lighthouse_audit` | Category-specific Lighthouse CLI audits plus manual checks |
-| Rendered semantics and interaction | `take_snapshot`, keyboard interaction, focused `evaluate_script` | Browser/manual testing |
+| Accessibility, SEO, Best Practices, Agentic Browsing | Run a live Lighthouse audit; with Chrome DevTools MCP, use `lighthouse_audit` | Category-specific Lighthouse CLI audits plus manual checks |
+| Rendered semantics and interaction | Inspect the accessibility tree and exercise the UI; with Chrome DevTools MCP, use `take_snapshot` and focused `evaluate_script` | Browser/manual testing |
 | Source smoke test | `scripts/analyze.sh <path>` | Direct source inspection |
 
-`lighthouse_audit` intentionally excludes performance. Its navigation mode reloads the page; use snapshot mode when preserving the current authenticated or user-created state matters. The static analyzer is a fast smoke test, not a substitute for a rendered-page audit.
+Chrome DevTools MCP's `lighthouse_audit` intentionally excludes performance. Its navigation mode reloads the page; use snapshot mode when preserving the current authenticated or user-created state matters. The static analyzer is a fast smoke test, not a substitute for a rendered-page audit.
 
 ## Audit categories
 
@@ -92,7 +92,7 @@ Use the best capability already available; do not block the audit on optional se
 **On-Page SEO:**
 * **Unique title tags.** Make each title descriptive and concise; display truncation varies by device and result type.
 * **Meta descriptions.** Write useful, page-specific summaries; search engines may choose a different snippet.
-* **Heading hierarchy.** Single `<h1>`. Logical heading structure.
+* **Heading hierarchy.** The primary heading is descriptive and the structure is logical; do not fail valid HTML solely for using more than one `<h1>`.
 * **Descriptive link text.** Not "click here" or "read more".
 
 **Technical SEO:**

@@ -1,6 +1,6 @@
 ---
 name: core-web-vitals
-description: Optimize Core Web Vitals (LCP, INP, CLS) for better page experience and search ranking. Use when asked to "improve Core Web Vitals", "fix LCP", "reduce CLS", "optimize INP", "page experience optimization", or "fix layout shifts".
+description: Optimize Core Web Vitals (LCP, INP, CLS) for better page experience using field and lab evidence. Use when asked to "improve Core Web Vitals", "fix LCP", "reduce CLS", "optimize INP", "page experience optimization", or "fix layout shifts".
 license: MIT
 metadata:
   author: web-quality-skills
@@ -16,7 +16,7 @@ Targeted optimization for the three Core Web Vitals using field data to identify
 When a runnable URL is available, read [the performance measurement workflow](../performance/references/MEASUREMENT.md). Prefer this sequence:
 
 1. Check page-level CrUX p75 data, with a clearly labeled origin fallback when page data is unavailable.
-2. Record a Chrome DevTools performance trace under stated conditions. Current Chrome DevTools MCP trace summaries can include CrUX alongside the observed lab metrics.
+2. Record a browser performance trace under stated conditions. With Chrome DevTools MCP, trace summaries can include CrUX alongside the observed lab metrics.
 3. Analyze only the insights associated with the failing metric, then inspect the implicated code and resources.
 4. Re-run equivalent lab measurements after the fix. Do not claim an immediate field improvement; CrUX and first-party RUM need new user visits.
 
@@ -102,7 +102,16 @@ For sites with predictable same-origin journeys, prerendering a likely next page
 </script>
 ```
 
-`eagerness` settings range from stronger intent signals (`conservative`, `moderate`) to earlier speculation (`eager`, `immediate`). Start conservatively and measure prediction hit rate, transferred bytes, server load, and navigation improvement before expanding the rules.
+Current Chrome behavior is specific enough to guide the choice:
+
+| `eagerness` | Trigger |
+|-------------|---------|
+| `conservative` | Pointer or touch down |
+| `moderate` | Desktop: 200ms hover, or earlier pointer down; mobile: viewport heuristics |
+| `eager` | Chrome 143+: desktop 10ms hover; mobile 50ms after the anchor enters the viewport |
+| `immediate` | As soon as the rules are observed |
+
+Start conservatively and measure prediction hit rate, transferred bytes, server load, and navigation improvement before expanding the rules. Recheck [Chrome's maintained eagerness documentation](https://developer.chrome.com/docs/web-platform/prerender-pages#eagerness) before hardcoding timing-sensitive behavior.
 
 Caveats:
 - **Bandwidth/CPU cost.** Each prerender is roughly a full page load. Scope `where` carefully (`href_matches` patterns, exclude logout/checkout) and avoid `immediate` outside small sites.
@@ -140,292 +149,17 @@ new PerformanceObserver((list) => {
 
 ## INP: Interaction to Next Paint
 
-INP measures responsiveness across ALL interactions (clicks, taps, key presses) during a page visit. It reports the worst interaction (at 98th percentile for high-traffic pages).
+INP measures responsiveness across clicks, taps, and key presses during a visit. Diagnose its input delay, processing time, and presentation delay separately; a slow interaction may involve main-thread contention before the handler, expensive application work, or delayed rendering after it.
 
-### INP breakdown
-
-Total INP = **Input Delay** + **Processing Time** + **Presentation Delay**
-
-| Phase | Target | Optimization |
-|-------|--------|--------------|
-| Input Delay | < 50ms | Reduce main thread blocking |
-| Processing | < 100ms | Optimize event handlers |
-| Presentation | < 50ms | Minimize rendering work |
-
-### Common INP issues
-
-**1. Long tasks blocking main thread**
-```javascript
-// ❌ Long synchronous task
-function processLargeArray(items) {
-  items.forEach(item => expensiveOperation(item));
-}
-
-// ✅ Break into chunks and yield to the scheduler. scheduler.yield() is the
-//    recommended modern API — its continuation is queued at a boosted
-//    priority so the rest of your work resumes ahead of unrelated tasks,
-//    while still letting the browser handle pending input first.
-async function processLargeArray(items) {
-  const CHUNK_SIZE = 100;
-  for (let i = 0; i < items.length; i += CHUNK_SIZE) {
-    items.slice(i, i + CHUNK_SIZE).forEach(expensiveOperation);
-
-    if ('scheduler' in window && 'yield' in scheduler) {
-      await scheduler.yield();
-    } else {
-      // Fallback for browsers without scheduler.yield (Safari, older Firefox).
-      // setTimeout(0) yields but loses priority — your continuation may run
-      // after unrelated tasks the browser picked up in between.
-      await new Promise(r => setTimeout(r, 0));
-    }
-  }
-}
-```
-
-**2. Heavy event handlers**
-```javascript
-// ❌ All work in handler
-button.addEventListener('click', () => {
-  // Heavy computation
-  const result = calculateComplexThing();
-  // DOM updates
-  updateUI(result);
-  // Analytics
-  trackEvent('click');
-});
-
-// ✅ Prioritize visual feedback, then yield before doing the heavy work
-button.addEventListener('click', async () => {
-  // 1. Immediate visual feedback (cheap DOM update)
-  button.classList.add('loading');
-
-  // 2. Yield so the browser can paint the loading state before we block
-  if ('scheduler' in window && 'yield' in scheduler) {
-    await scheduler.yield();
-  }
-
-  // 3. Now do the heavy work — the user already saw the click register
-  const result = calculateComplexThing();
-  updateUI(result);
-
-  // 4. Lowest-priority work last, when the main thread is idle
-  if ('requestIdleCallback' in window) {
-    requestIdleCallback(() => trackEvent('click'));
-  } else {
-    setTimeout(() => trackEvent('click'), 0);
-  }
-});
-```
-
-**3. Third-party scripts**
-```javascript
-// ❌ Eagerly loaded, blocks interactions
-<script src="https://heavy-widget.com/widget.js"></script>
-
-// ✅ Lazy loaded on interaction or visibility
-const loadWidget = () => {
-  import('https://heavy-widget.com/widget.js')
-    .then(widget => widget.init());
-};
-button.addEventListener('click', loadWidget, { once: true });
-```
-
-**4. Excessive re-renders (React/Vue)**
-```javascript
-// ❌ Re-renders entire tree
-function App() {
-  const [count, setCount] = useState(0);
-  return (
-    <div>
-      <Counter count={count} />
-      <ExpensiveComponent /> {/* Re-renders on every count change */}
-    </div>
-  );
-}
-
-// ✅ Memoized expensive components
-const MemoizedExpensive = React.memo(ExpensiveComponent);
-
-function App() {
-  const [count, setCount] = useState(0);
-  return (
-    <div>
-      <Counter count={count} />
-      <MemoizedExpensive />
-    </div>
-  );
-}
-```
-
-### INP optimization checklist
-
-```markdown
-- [ ] No tasks > 50ms on main thread
-- [ ] Event handlers complete quickly (< 100ms)
-- [ ] Visual feedback provided immediately
-- [ ] Heavy work deferred with requestIdleCallback
-- [ ] Third-party scripts don't block interactions
-- [ ] Debounced input handlers where appropriate
-- [ ] Web Workers for CPU-intensive operations
-```
-
-### INP debugging
-
-This snippet diagnoses interactions performed in the current page session. It is not a substitute for field INP.
-
-```javascript
-// Identify slow interactions. durationThreshold: 40 matches what the
-// web-vitals library uses — 16 (one frame) fires on nearly every interaction
-// and drowns the console; 40 surfaces interactions that are starting to feel
-// sluggish without spamming.
-new PerformanceObserver((list) => {
-  for (const entry of list.getEntries()) {
-    if (entry.duration > 200) {
-      console.warn('Slow interaction:', {
-        type: entry.name,
-        duration: entry.duration,
-        processingStart: entry.processingStart,
-        processingEnd: entry.processingEnd,
-        target: entry.target
-      });
-    }
-  }
-}).observe({ type: 'event', buffered: true, durationThreshold: 40 });
-```
-
-For field debugging across real users, prefer the `web-vitals/attribution` build of the [web-vitals library](https://github.com/GoogleChrome/web-vitals) — `onINP()` from that build attaches a `LoAF` (Long Animation Frame) breakdown identifying the longest script and the input/processing/presentation phase that ate the budget.
+When field INP is poor or a trace identifies a slow interaction, read [the INP reference](references/INP.md) for trace interpretation, yielding patterns, third-party and rendering causes, a single-session observer, and first-party attribution.
 
 ---
 
 ## CLS: Cumulative Layout Shift
 
-CLS measures unexpected layout shifts. A shift occurs when a visible element changes position between frames without user interaction.
+CLS measures unexpected layout shifts across a page visit. Use field attribution or a trace to identify the shifted node and the trigger; do not assume the visible victim caused the shift.
 
-**CLS Formula:** `impact fraction × distance fraction`
-
-### Common CLS causes
-
-**1. Images without dimensions**
-```html
-<!-- ❌ Causes layout shift when loaded -->
-<img src="photo.jpg" alt="Photo">
-
-<!-- ✅ Space reserved -->
-<img src="photo.jpg" alt="Photo" width="800" height="600">
-
-<!-- ✅ Or use aspect-ratio -->
-<img src="photo.jpg" alt="Photo" style="aspect-ratio: 4/3; width: 100%;">
-```
-
-**2. Ads, embeds, and iframes**
-```html
-<!-- ❌ Unknown size until loaded -->
-<iframe src="https://ad-network.com/ad"></iframe>
-
-<!-- ✅ Reserve space with min-height -->
-<div style="min-height: 250px;">
-  <iframe src="https://ad-network.com/ad" height="250"></iframe>
-</div>
-
-<!-- ✅ Or use aspect-ratio container -->
-<div style="aspect-ratio: 16/9;">
-  <iframe src="https://youtube.com/embed/..." 
-          style="width: 100%; height: 100%;"></iframe>
-</div>
-```
-
-**3. Dynamically injected content**
-```javascript
-// ❌ Inserts content above viewport
-notifications.prepend(newNotification);
-
-// ✅ Insert below viewport or use transform
-const insertBelow = viewport.bottom < newNotification.top;
-if (insertBelow) {
-  notifications.prepend(newNotification);
-} else {
-  // Animate in without shifting
-  newNotification.style.transform = 'translateY(-100%)';
-  notifications.prepend(newNotification);
-  requestAnimationFrame(() => {
-    newNotification.style.transform = '';
-  });
-}
-```
-
-**4. Web fonts causing FOUT**
-```css
-/* ❌ Font swap shifts text */
-@font-face {
-  font-family: 'Custom';
-  src: url('custom.woff2') format('woff2');
-}
-
-/* ✅ Optional font (no shift if slow) */
-@font-face {
-  font-family: 'Custom';
-  src: url('custom.woff2') format('woff2');
-  font-display: optional;
-}
-
-/* ✅ Or match fallback metrics */
-@font-face {
-  font-family: 'Custom';
-  src: url('custom.woff2') format('woff2');
-  font-display: swap;
-  size-adjust: 105%; /* Match fallback size */
-  ascent-override: 95%;
-  descent-override: 20%;
-}
-```
-
-**5. Animations triggering layout**
-```css
-/* ❌ Animates layout properties */
-.animate {
-  transition: height 0.3s, width 0.3s;
-}
-
-/* ✅ Use transform instead */
-.animate {
-  transition: transform 0.3s;
-}
-.animate.expanded {
-  transform: scale(1.2);
-}
-```
-
-### CLS optimization checklist
-
-```markdown
-- [ ] All images have width/height or aspect-ratio
-- [ ] All videos/embeds have reserved space
-- [ ] Ads have min-height containers
-- [ ] Fonts use font-display: optional or matched metrics
-- [ ] Dynamic content inserted below viewport
-- [ ] Animations use transform/opacity only
-- [ ] No content injected above existing content
-```
-
-### CLS debugging
-
-This snippet diagnoses shifts observed in the current page session. It does not represent the distribution of real visits.
-
-```javascript
-// Track layout shifts
-new PerformanceObserver((list) => {
-  for (const entry of list.getEntries()) {
-    if (!entry.hadRecentInput) {
-      console.log('Layout shift:', entry.value);
-      entry.sources?.forEach(source => {
-        console.log('  Shifted element:', source.node);
-        console.log('  Previous rect:', source.previousRect);
-        console.log('  Current rect:', source.currentRect);
-      });
-    }
-  }
-}).observe({ type: 'layout-shift', buffered: true });
-```
+When field CLS is poor or a trace reports shifts, read [the CLS reference](references/CLS.md) for reserved-space patterns, dynamic content, font and animation fixes, a debugging observer, and a verification checklist.
 
 ---
 
@@ -433,13 +167,13 @@ new PerformanceObserver((list) => {
 
 | Source | Use |
 |--------|-----|
-| Chrome DevTools MCP `performance_start_trace` | Observe one load or interaction and diagnose Performance Insights; use the included CrUX context when available |
+| Browser performance trace (Chrome DevTools MCP: `performance_start_trace`) | Observe one load or interaction and diagnose focused insights; use included CrUX context when available |
 | CrUX or Search Console | Prioritize aggregated real-user outcomes at p75 |
 | Lighthouse CLI or PageSpeed Insights | Controlled lab fallback when DevTools tools are unavailable |
 | First-party RUM | Segment current production experience by route, device, release, and attribution |
 | Raw `PerformanceObserver` | Inspect one page session during debugging |
 
-Do not use `lighthouse_audit` for performance when working through Chrome DevTools MCP; that tool intentionally covers non-performance Lighthouse categories. Do not compare a single lab value directly with a field p75 as if they were equivalent samples.
+Do not route performance through Chrome DevTools MCP's `lighthouse_audit`; that capability intentionally covers non-performance Lighthouse categories. Do not compare a single lab value directly with a field p75 as if they were equivalent samples.
 
 When adding or reviewing production collection, read [the first-party RUM reference](../performance/references/RUM.md). Prefer the `web-vitals` library because raw browser APIs do not by themselves implement every Core Web Vital's lifecycle and reporting rules.
 
@@ -486,6 +220,8 @@ startTransition(() => setExpensiveState(newValue));
 ## References
 
 - [Detailed LCP optimization](references/LCP.md) — read when an LCP trace points to discovery, loading, or render delay
+- [Detailed INP optimization](references/INP.md) — read when a trace or field attribution identifies a slow interaction
+- [Detailed CLS optimization](references/CLS.md) — read when a trace or field attribution identifies unexpected shifts
 - [web.dev LCP](https://web.dev/articles/lcp)
 - [web.dev INP](https://web.dev/articles/inp)
 - [web.dev CLS](https://web.dev/articles/cls)

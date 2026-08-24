@@ -118,7 +118,7 @@ Make this SEO-ready
 
 ### Optional Chrome DevTools integration
 
-When the agent already exposes [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) tools, the skills automatically prefer:
+When the agent exposes equivalent live-browser capabilities, the skills prefer them. With [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp), the current tool names are:
 
 - `performance_start_trace` and focused Performance Insights for performance work, including CrUX context when eligible field data exists
 - `lighthouse_audit` for Accessibility, SEO, Best Practices, and Agentic Browsing
@@ -158,7 +158,7 @@ Deep-dive into loading and runtime performance optimization, using CrUX or first
 
 ### core-web-vitals
 
-Specialized skill for the three Core Web Vitals that affect Google Search ranking.
+Specialized skill for the three Core Web Vitals that describe loading, responsiveness, and visual stability. Google uses Core Web Vitals in its page-experience systems, but a passing score does not promise a ranking change.
 
 **Trigger phrases:** "Core Web Vitals", "LCP", "INP", "CLS", "page experience"
 

@@ -43,8 +43,8 @@ Scores are regression guardrails, not proof of accessibility, security, rankings
 
 ### Live audit routing
 
-- Use Chrome DevTools MCP `performance_start_trace` and focused `performance_analyze_insight` calls for performance. Current traces may include CrUX field context.
-- Use `lighthouse_audit` for Accessibility, SEO, Best Practices, and Agentic Browsing; it intentionally excludes performance.
+- Prefer capabilities over provider-specific tool names. Record a browser performance trace and analyze focused insights; with Chrome DevTools MCP, use `performance_start_trace` and `performance_analyze_insight`. Current traces may include CrUX field context.
+- Run live Lighthouse audits for Accessibility, SEO, Best Practices, and Agentic Browsing; with Chrome DevTools MCP, use `lighthouse_audit`. It intentionally excludes performance.
 - Read `skills/performance/references/MEASUREMENT.md` for field/lab fallbacks and repeatable comparisons.
 - When no page can run, label performance findings as source hypotheses and provide a verification workflow.
 
@@ -68,7 +68,7 @@ Scores are regression guardrails, not proof of accessibility, security, rankings
 
 ```bash
 # Validate skill format
-for skill in skills/*; do npx skills-ref validate "$skill"; done
+for skill in skills/*/; do npx skills-ref validate "$skill" || exit 1; done
 
 # Lint markdown
 npx markdownlint skills/**/*.md

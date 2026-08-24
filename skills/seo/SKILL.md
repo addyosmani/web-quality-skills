@@ -15,7 +15,7 @@ Search engine optimization based on Lighthouse SEO audits and Google Search guid
 
 When a rendered page is available:
 
-1. If Chrome DevTools MCP exposes `lighthouse_audit`, run the SEO and Agentic Browsing checks on the target URL. Use the results to localize rendered-page failures.
+1. Run live Lighthouse SEO and Agentic Browsing checks when that capability is available; with Chrome DevTools MCP, use `lighthouse_audit`. Use the results to localize rendered-page failures.
 2. Inspect signals Lighthouse cannot establish on its own: response headers, redirects, `robots.txt`, sitemap coverage, canonical consistency across page templates, structured-data eligibility, and Search Console evidence when the user provides access.
 3. Separate technical crawl/index findings from content quality and authority. Do not invent ranking-factor weights or promise ranking changes.
 4. Fix the source and re-run the same checks. For indexation or ranking outcomes, report that search-engine validation remains pending.
@@ -161,11 +161,13 @@ X-Frame-Options: DENY
 ```
 
 **Title tag guidelines:**
-- Concise enough to remain useful when a result truncates it; there is no universal character limit
+- Use 50–60 characters only as a rough linting proxy, not a pass/fail limit. Google truncates title links to fit the rendered device width, so preview width when tooling supports it.
 - Describe the page topic naturally near the beginning
 - Unique for every page
 - Add the brand when it helps users distinguish the result
 - Action-oriented when appropriate
+
+Treat title-link rewriting separately from truncation. Google may build a different title link from the visible page title, headings, anchor text, and other sources even when the `<title>` is short; investigate accuracy and consistency rather than shortening it automatically. See [Google's title-link guidance](https://developers.google.com/search/docs/appearance/title-link).
 
 ### Meta descriptions
 
@@ -178,7 +180,7 @@ X-Frame-Options: DENY
 ```
 
 **Meta description guidelines:**
-- Summarize the page concisely; snippet length varies and search engines may rewrite it
+- Use roughly 150–160 characters only as a linting proxy. Snippets are query- and device-dependent, and Google may select page content instead of the meta description.
 - Use the page topic naturally
 - Compelling call-to-action
 - Unique for every page
@@ -202,7 +204,7 @@ X-Frame-Options: DENY
 ```
 
 **Heading guidelines:**
-- Single `<h1>` per page (the main topic)
+- Make the primary page heading descriptive and the hierarchy unambiguous; do not fail a page solely because valid HTML contains more than one `<h1>`
 - Logical hierarchy (don't skip levels)
 - Include keywords naturally
 - Descriptive, not generic
@@ -267,9 +269,22 @@ Keep these concepts separate:
 
 Prioritize semantic HTML, descriptive labels, crawlable content, accurate metadata, and clear page structure because they benefit people, search engines, and agents. Add WebMCP tools only when the application has useful actions to expose and the user wants that integration; validate tool names, descriptions, schemas, and form annotations with Lighthouse.
 
+### Crawler controls are product-specific
+
+Audit each documented user agent separately instead of applying a blanket "AI bot" rule:
+
+| Control | Documented purpose | Effect of blocking |
+|---------|--------------------|--------------------|
+| `OAI-SearchBot` | ChatGPT search discovery | Prevents page content from being included in ChatGPT summaries and snippets; a link and title may still surface through third-party discovery |
+| `PerplexityBot` | Perplexity search indexing | Prevents that crawler from indexing the blocked content for search results |
+| `Claude-SearchBot` / `Claude-User` | Claude search indexing / user-directed retrieval | May reduce search visibility / prevents retrieval for user-directed requests |
+| `Google-Extended` | Controls certain Gemini training and grounding uses of content Google crawls | Does not affect Google Search inclusion or ranking |
+
+Training controls such as `GPTBot` and `ClaudeBot` are distinct from search and user-fetch controls. `GoogleOther` is a generic crawler, not an AI-search visibility switch. Verify current names and consequences in the vendors' maintained documentation: [OpenAI](https://help.openai.com/en/articles/12627856-publishers-and-developers-faq), [Perplexity](https://docs.perplexity.ai/docs/resources/perplexity-crawlers), [Anthropic](https://privacy.anthropic.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler), and [Google](https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers).
+
 ### `llms.txt` is optional
 
-Lighthouse can validate the availability and shape of `/llms.txt` as an Agentic Browsing signal. Treat it as a curated discovery aid for compatible consumers, not as an SEO requirement or ranking factor. Do not generate a large file, duplicate the sitemap, or reorganize content solely to raise this audit.
+`llms.txt` is an experimental proposal, not a cross-vendor discovery standard. Lighthouse can validate the availability and shape of `/llms.txt`, but that does not show that a target product reads it. Add one only when the user requests it or a documented consumer supports it; do not recommend it ahead of crawlability, semantic HTML, accurate metadata, and useful content. Never treat it as a ranking or citation factor, duplicate the sitemap, or reorganize content solely to raise this audit.
 
 ---
 
@@ -382,7 +397,7 @@ body {
 | Google Search Console | Monitor indexing, fix issues |
 | Google PageSpeed Insights | Performance + Core Web Vitals |
 | Rich Results Test | Validate structured data |
-| Chrome DevTools MCP `lighthouse_audit` | Live SEO and Agentic Browsing checks for agents |
+| Live Lighthouse audit (Chrome DevTools MCP: `lighthouse_audit`) | Rendered SEO and Agentic Browsing checks for agents |
 | Lighthouse CLI | SEO audit fallback |
 | Screaming Frog | Crawl analysis |
 

@@ -15,7 +15,7 @@ Modern web development standards based on Lighthouse best practices audits. Cove
 
 When a rendered page is available:
 
-1. If Chrome DevTools MCP exposes `lighthouse_audit`, run the Best Practices audit for the target state. Use navigation mode for a normal page load or snapshot mode when the current state must be preserved.
+1. Run a live Lighthouse Best Practices audit when that capability is available; with Chrome DevTools MCP, use `lighthouse_audit`. Use navigation mode for a normal page load or snapshot mode when the current state must be preserved.
 2. Inspect the listed console and network failures and fetch individual details only when they support a finding.
 3. Supplement runtime evidence with dependency, header, configuration, and source inspection; Lighthouse is not a complete security assessment.
 4. Fix the implicated code, re-run the same audit, and keep security findings separate from style preferences.
@@ -469,7 +469,7 @@ findNearbyButton.addEventListener('click', async () => {
 | `npm audit` | Dependency vulnerabilities |
 | [SecurityHeaders.com](https://securityheaders.com) | Header analysis |
 | [W3C Validator](https://validator.w3.org) | HTML validation |
-| Chrome DevTools MCP `lighthouse_audit` | Live Best Practices checks for agents |
+| Live Lighthouse audit (Chrome DevTools MCP: `lighthouse_audit`) | Rendered Best Practices checks for agents |
 | Lighthouse CLI | Best Practices audit fallback |
 | [Observatory](https://observatory.mozilla.org) | Security scan |
 

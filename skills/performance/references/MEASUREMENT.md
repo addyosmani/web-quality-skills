@@ -16,19 +16,19 @@ A `PerformanceObserver` result injected into one browser page is a **single-sess
 
 ## Preferred low-friction route
 
-When Chrome DevTools MCP tools are available:
+When browser tooling can record a performance trace and run Lighthouse audits, prefer this route. With Chrome DevTools MCP:
 
 1. Navigate to the exact route and state being audited. Record whether it is public, authenticated, local, or staging.
-2. Use `performance_start_trace` with reload and auto-stop for page-load performance. Current trace summaries can include both observed lab metrics and CrUX field metrics when CrUX has eligible data. Record whether field scope is URL or origin.
-3. Use `performance_analyze_insight` only for the relevant insight set and the failing or suspicious insights. Common examples are `LCPBreakdown`, `LCPDiscovery`, `DocumentLatency`, `RenderBlocking`, and `ThirdParties`.
-4. Use `lighthouse_audit` for Accessibility, SEO, Best Practices, and Agentic Browsing. It deliberately excludes performance; do not treat it as the performance path.
+2. Record a reload trace with auto-stop for page-load performance (`performance_start_trace`). Current trace summaries can include both observed lab metrics and CrUX field metrics when CrUX has eligible data. Record whether field scope is URL or origin.
+3. Analyze only the relevant failing or suspicious insights (`performance_analyze_insight`). Common examples are `LCPBreakdown`, `LCPDiscovery`, `DocumentLatency`, `RenderBlocking`, and `ThirdParties`.
+4. Run the Lighthouse audit capability (`lighthouse_audit`) for Accessibility, SEO, Best Practices, and Agentic Browsing. It deliberately excludes performance; do not treat it as the performance path.
 5. Re-run the same lab measurement after a fix. Field data will not reflect a new deployment immediately.
 
 Use mobile conditions by default for a general public-site audit. Add desktop when the user asks for it, desktop traffic matters, or the product is desktop-oriented. Test authenticated and unauthenticated states separately when they render different pages.
 
 When using emulation, set the viewport, network conditions, and CPU rate explicitly before the trace, confirm the reported conditions, and reset them before testing another profile.
 
-`lighthouse_audit` navigation mode reloads the page. Use snapshot mode for the current state when a reload would lose an authenticated or user-created state. Do not run a navigation audit on an unsaved form or destructive workflow.
+Chrome DevTools MCP's Lighthouse navigation mode reloads the page. Use snapshot mode for the current state when a reload would lose an authenticated or user-created state. Do not run a navigation audit on an unsaved form or destructive workflow.
 
 ### Token-efficient tool use
 

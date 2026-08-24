@@ -15,9 +15,9 @@ Comprehensive accessibility guidelines based on WCAG 2.2 and Lighthouse accessib
 
 When a rendered page is available:
 
-1. If Chrome DevTools MCP exposes `lighthouse_audit`, run the Accessibility audit against the target state. Use mobile navigation mode for a general public page; use snapshot mode when reloading would lose authenticated or user-created state.
+1. Run a live Lighthouse Accessibility audit when that capability is available; with Chrome DevTools MCP, use `lighthouse_audit`. Use mobile navigation mode for a general public page or snapshot mode when reloading would lose authenticated or user-created state.
 2. Use failed audit nodes to localize the relevant component or template instead of searching the whole repository for generic patterns.
-3. Use `take_snapshot` to inspect rendered names, roles, states, landmarks, and heading structure. Exercise the affected flow with the keyboard.
+3. Inspect a rendered accessibility-tree snapshot for names, roles, states, landmarks, and heading structure; with Chrome DevTools MCP, use `take_snapshot`. Exercise the affected flow with the keyboard.
 4. Fix the source, then re-run the same audit and manual interaction.
 
 If the live tools are unavailable, use Lighthouse CLI or axe for automated coverage and complete the same manual checks. Automated tools detect only a subset of accessibility barriers: a score of 100 is not WCAG conformance, and a low score does not replace issue-level evidence.
@@ -406,7 +406,7 @@ Use `aria-live` regions to announce dynamic content changes without moving focus
 
 ### Automated testing
 
-Prefer the live Chrome DevTools `lighthouse_audit` when available because it returns failing rendered nodes directly to the agent. Otherwise:
+Prefer a live Lighthouse audit that returns failing rendered nodes directly to the agent. With Chrome DevTools MCP, this is `lighthouse_audit`. Otherwise:
 
 ```bash
 # Lighthouse accessibility audit
