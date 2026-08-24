@@ -29,6 +29,12 @@ After install, invoke a skill in Codex chat with `@` (e.g. `@performance`, `@acc
 - `seo`
 - `best-practices`
 
+## Optional live browser measurements
+
+The plugin ships skills, not a bundled browser server. If your Codex environment already exposes [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp), the skills use performance traces, CrUX context, Lighthouse audits, rendered accessibility snapshots, console messages, and network requests automatically.
+
+Without those tools, the same skills fall back to Lighthouse CLI, PageSpeed Insights/CrUX tools, manual browser checks, and static source inspection. Chrome DevTools MCP is an enhancement, not an installation requirement.
+
 ## How it works
 
 - `codex/.codex-plugin/plugin.json` — Codex plugin manifest. Points `skills` at `./skills/`.

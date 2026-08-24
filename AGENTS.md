@@ -4,7 +4,14 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 ## Project overview
 
-Web Quality Skills is a collection of Agent Skills for optimizing web projects based on Google Lighthouse guidelines. Skills follow the [Agent Skills specification](https://agentskills.io/specification).
+Web Quality Skills is a measurement-first collection of Agent Skills for Google Lighthouse, Chrome DevTools, Core Web Vitals, accessibility, SEO, best practices, and agentic browsing. Skills follow the [Agent Skills specification](https://agentskills.io/specification).
+
+### Live audit routing
+
+- Prefer capabilities over provider-specific tool names. Record a browser performance trace and analyze focused insights; with Chrome DevTools MCP, use `performance_start_trace` and `performance_analyze_insight`.
+- Run live Lighthouse audits for Accessibility, SEO, Best Practices, and Agentic Browsing; with Chrome DevTools MCP, use `lighthouse_audit`. It intentionally excludes performance.
+- Read `skills/performance/references/MEASUREMENT.md` for field/lab fallbacks, CrUX scope, and repeatable comparisons.
+- Treat a single trace or `PerformanceObserver` result as a lab observation, not real-user data. When no page can run, label performance findings as source hypotheses.
 
 ## Directory structure
 
@@ -181,6 +188,12 @@ Before submitting a skill:
 4. Ensure all referenced files exist
 5. Validate against the [Agent Skills specification](https://agentskills.io/specification)
 
+Run every skill validator with failure propagation:
+
+```bash
+for skill in skills/*/; do npx skills-ref validate "$skill" || exit 1; done
+```
+
 ## Priority rules
 
 When reviewing code, prioritize by impact:
@@ -205,5 +218,5 @@ When updating existing skills:
 
 1. Maintain backward compatibility in descriptions
 2. Update version in frontmatter metadata
-3. Document breaking changes in commit message
+3. Document intentional behavior changes in the commit message and `CHANGELOG.md`
 4. Keep existing trigger phrases working

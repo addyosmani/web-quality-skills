@@ -4,197 +4,35 @@ description: Apply modern web development best practices for security, compatibi
 license: MIT
 metadata:
   author: web-quality-skills
-  version: "1.0"
+  version: "2.0"
 ---
 
 # Best practices
 
 Modern web development standards based on Lighthouse best practices audits. Covers security, browser compatibility, and code quality patterns.
 
+## Evidence-led audit workflow
+
+When a rendered page is available:
+
+1. Run a live Lighthouse Best Practices audit when that capability is available; with Chrome DevTools MCP, use `lighthouse_audit`. Use navigation mode for a normal page load or snapshot mode when the current state must be preserved.
+2. Inspect the listed console and network failures and fetch individual details only when they support a finding.
+3. Supplement runtime evidence with dependency, header, configuration, and source inspection; Lighthouse is not a complete security assessment.
+4. Fix the implicated code, re-run the same audit, and keep security findings separate from style preferences.
+
+If live tools are unavailable, use the Lighthouse CLI plus focused dependency and header checks. Never report a high Lighthouse score as proof that the application is secure.
+
 ## Security
 
-### HTTPS everywhere
+Read [the security reference](references/SECURITY.md) when security is in scope or a live audit surfaces a related failure. It covers HTTPS/HSTS, CSP and Trusted Types, Subresource Integrity, headers, dependencies, sanitization, and cookies.
 
-**Enforce HTTPS:**
-```html
-<!-- ❌ Mixed content -->
-<img src="http://example.com/image.jpg">
-<script src="http://cdn.example.com/script.js"></script>
+At minimum:
 
-<!-- ✅ HTTPS only -->
-<img src="https://example.com/image.jpg">
-<script src="https://cdn.example.com/script.js"></script>
-```
-
-Avoid protocol-relative URLs (`//example.com/...`) — they're an HTTP-era pattern with no benefit on HTTPS-only sites and hide the actual scheme from reviewers.
-
-**HSTS Header:**
-```
-Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
-```
-
-### Content Security Policy (CSP)
-
-```html
-<!-- Basic CSP via meta tag -->
-<meta http-equiv="Content-Security-Policy" 
-      content="default-src 'self'; 
-               script-src 'self' https://trusted-cdn.com; 
-               style-src 'self' 'unsafe-inline';
-               img-src 'self' data: https:;
-               connect-src 'self' https://api.example.com;">
-
-<!-- Better: HTTP header -->
-```
-
-**CSP Header (recommended):**
-```
-Content-Security-Policy: 
-  default-src 'self';
-  script-src 'self' 'nonce-abc123' https://trusted.com;
-  style-src 'self' 'nonce-abc123';
-  img-src 'self' data: https:;
-  connect-src 'self' https://api.example.com;
-  frame-ancestors 'self';
-  base-uri 'self';
-  form-action 'self';
-```
-
-**Using nonces for inline scripts:**
-```html
-<script nonce="abc123">
-  // This inline script is allowed
-</script>
-```
-
-### Trusted Types (modern DOM-XSS defense)
-
-A strict CSP blocks loading untrusted *script files*, but it doesn't stop a string from reaching `innerHTML`, `eval`, or other DOM-XSS sinks. Trusted Types — Baseline across all major browsers since early 2026 — closes that hole by making sinks reject raw strings and accept only typed objects produced by a named policy.
-
-```
-Content-Security-Policy: require-trusted-types-for 'script'; trusted-types default;
-```
-
-```javascript
-// One central policy that does the sanitization
-const escape = trustedTypes.createPolicy('default', {
-  createHTML: (s) => DOMPurify.sanitize(s, { RETURN_TRUSTED_TYPE: true })
-});
-
-// ❌ This now throws TypeError under enforcement
-element.innerHTML = userInput;
-
-// ✅ Goes through the policy
-element.innerHTML = escape.createHTML(userInput);
-```
-
-Roll out with `Content-Security-Policy-Report-Only` first to find every sink usage in your app, then flip to enforcement. Angular has built-in Trusted Types support; React 19+ produces TrustedHTML when Trusted Types are enforced; for everything else, [DOMPurify](https://github.com/cure53/DOMPurify) is the de-facto sanitizer.
-
-### Subresource Integrity (SRI) for third-party scripts
-
-Pin every `<script>` and `<link rel="stylesheet">` you load from a CDN you don't control. If the CDN is compromised — as happened to polyfill.io in 2024 — the browser refuses to execute a file whose hash doesn't match.
-
-```html
-<script src="https://cdn.example.com/lib@1.2.3/dist/lib.js"
-        integrity="sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxy9rx7HNQlGYl1kPzQho1wx4JwY8wC"
-        crossorigin="anonymous"></script>
-```
-
-`integrity` accepts space-separated hashes; include the next version's hash before rotating to avoid downtime. Generate with `openssl dgst -sha384 -binary file.js | openssl base64 -A`. SRI requires `crossorigin` and an `Access-Control-Allow-Origin` response header from the CDN.
-
-### Security headers
-
-```
-# Prevent clickjacking — prefer CSP `frame-ancestors` (above); X-Frame-Options
-# is the legacy fallback for older browsers.
-X-Frame-Options: DENY
-
-# Prevent MIME type sniffing
-X-Content-Type-Options: nosniff
-
-# Do NOT send X-XSS-Protection. The legacy browser XSS auditor was deprecated
-# and removed (Chrome 78, Edge 17), and in some cases it introduced its own
-# vulnerabilities. Use a strict CSP + Trusted Types (below) instead.
-
-# Control referrer information
-Referrer-Policy: strict-origin-when-cross-origin
-
-# Permissions policy (formerly Feature-Policy)
-Permissions-Policy: geolocation=(), microphone=(), camera=()
-```
-
-### No vulnerable libraries
-
-```bash
-# Check for vulnerabilities
-npm audit
-yarn audit
-
-# Auto-fix when possible
-npm audit fix
-
-# Check specific package
-npm ls lodash
-```
-
-**Keep dependencies updated:**
-```json
-// package.json
-{
-  "scripts": {
-    "audit": "npm audit --audit-level=moderate",
-    "update": "npm update && npm audit fix"
-  }
-}
-```
-
-**Known vulnerable patterns to avoid:**
-```javascript
-// ❌ Recursive merges of untrusted input can pollute Object.prototype
-//    via __proto__, constructor, or prototype keys.
-_.merge(target, userInput);          // lodash <4.17.20
-$.extend(true, {}, target, userInput); // jQuery deep extend
-Object.assign(target, ...userInputs); // safe by itself (shallow), but unsafe
-                                      // when target IS Object.prototype-derived
-                                      // and userInput contains __proto__
-
-// ✅ For untrusted bags, use a null-prototype object so __proto__ is just a key
-const safe = Object.create(null);
-Object.assign(safe, userInput); // shallow, no recursion → safe by construction
-
-// ✅ For deep copies, structuredClone drops __proto__ and functions
-const deepSafe = structuredClone(userInput);
-
-// ✅ For deep merges, use a library that explicitly blocks dangerous keys
-//    (e.g. lodash ≥4.17.21 _.mergeWith with a customizer, or deepmerge-ts).
-```
-
-### Input sanitization
-
-```javascript
-// ❌ XSS vulnerable
-element.innerHTML = userInput;
-document.write(userInput);
-
-// ✅ Safe text content
-element.textContent = userInput;
-
-// ✅ If HTML needed, sanitize
-import DOMPurify from 'dompurify';
-element.innerHTML = DOMPurify.sanitize(userInput);
-```
-
-### Secure cookies
-
-```javascript
-// ❌ Insecure cookie
-document.cookie = "session=abc123";
-
-// ✅ Secure cookie (server-side)
-Set-Cookie: session=abc123; Secure; HttpOnly; SameSite=Strict; Path=/
-```
-
----
+* **Use HTTPS without mixed content.** Add HSTS only after confirming every relevant subdomain supports HTTPS.
+* **Treat a strict CSP as defense in depth.** Prefer nonces or hashes and test with report-only before enforcement.
+* **Sanitize untrusted HTML and protect DOM XSS sinks.** Prefer text APIs when markup is not required.
+* **Pin and review third-party code.** Use SRI where the delivery model supports it and keep dependencies patched.
+* **Verify response headers at runtime.** Source configuration alone does not prove what the deployed page sends.
 
 ## Browser compatibility
 
@@ -631,7 +469,8 @@ findNearbyButton.addEventListener('click', async () => {
 | `npm audit` | Dependency vulnerabilities |
 | [SecurityHeaders.com](https://securityheaders.com) | Header analysis |
 | [W3C Validator](https://validator.w3.org) | HTML validation |
-| Lighthouse | Best practices audit |
+| Live Lighthouse audit (Chrome DevTools MCP: `lighthouse_audit`) | Rendered Best Practices checks for agents |
+| Lighthouse CLI | Best Practices audit fallback |
 | [Observatory](https://observatory.mozilla.org) | Security scan |
 
 ## References

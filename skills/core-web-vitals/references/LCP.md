@@ -46,7 +46,7 @@ res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
 
 **For images:**
 ```html
-<!-- Preload LCP image -->
+<!-- Preload only when a trace shows the LCP image is discovered late -->
 <link rel="preload" as="image" href="/hero.webp" 
       imagesrcset="/hero-400.webp 400w, /hero-800.webp 800w"
       imagesizes="100vw"
@@ -199,10 +199,12 @@ new PerformanceObserver((entryList) => {
 
 ## Common issues
 
-| Issue | Impact | Fix |
-|-------|--------|-----|
-| No preload for LCP image | +500-1000ms | Add `<link rel="preload">` |
-| Large unoptimized image | +300-800ms | Compress, use WebP/AVIF |
-| Render-blocking CSS | +200-500ms | Inline critical CSS |
-| Slow TTFB | +300-2000ms | CDN, edge caching |
-| Client-rendered content | +500-2000ms | SSR/SSG |
+| Issue | Evidence to confirm | Typical fix |
+|-------|---------------------|-------------|
+| LCP resource discovered late | Large resource load delay in `LCPBreakdown` or `LCPDiscovery` | Put it in initial HTML, add priority, and preload only when still necessary |
+| Large image transfer | Resource load duration and response bytes dominate | Resize/compress and choose an appropriate format |
+| Render-blocking CSS | `RenderBlocking` insight and long render delay | Remove unused rules, split non-critical CSS, or inline only proven critical CSS |
+| Slow TTFB | `DocumentLatency` insight or LCP TTFB subpart dominates | Cache, reduce redirects, or optimize server work |
+| Client-rendered LCP | LCP element absent from initial HTML and render delay dominates | SSR, static rendering, or earlier rendering |
+
+Do not attach generic millisecond savings to these fixes. Measure the relevant LCP subpart before and after under equivalent conditions.

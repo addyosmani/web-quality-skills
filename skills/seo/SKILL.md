@@ -4,24 +4,31 @@ description: Optimize for search engine visibility and ranking. Use when asked t
 license: MIT
 metadata:
   author: web-quality-skills
-  version: "1.0"
+  version: "2.0"
 ---
 
 # SEO optimization
 
 Search engine optimization based on Lighthouse SEO audits and Google Search guidelines. Focus on technical SEO, on-page optimization, and structured data.
 
-## SEO fundamentals
+## Evidence-led audit workflow
 
-Search ranking factors (approximate influence):
+When a rendered page is available:
 
-| Factor | Influence | This Skill |
-|--------|-----------|------------|
-| Content quality & relevance | ~40% | Partial (structure) |
-| Backlinks & authority | ~25% | ✗ |
-| Technical SEO | ~15% | ✓ |
-| Page experience (Core Web Vitals) | ~10% | See [Core Web Vitals](../core-web-vitals/SKILL.md) |
-| On-page SEO | ~10% | ✓ |
+1. Run live Lighthouse SEO and Agentic Browsing checks when that capability is available; with Chrome DevTools MCP, use `lighthouse_audit`. Use the results to localize rendered-page failures.
+2. Inspect signals Lighthouse cannot establish on its own: response headers, redirects, `robots.txt`, sitemap coverage, canonical consistency across page templates, structured-data eligibility, and Search Console evidence when the user provides access.
+3. Separate technical crawl/index findings from content quality and authority. Do not invent ranking-factor weights or promise ranking changes.
+4. Fix the source and re-run the same checks. For indexation or ranking outcomes, report that search-engine validation remains pending.
+
+If live tools are unavailable, use category-specific Lighthouse CLI output plus direct source and HTTP inspection. A Lighthouse SEO score covers a useful subset of technical checks; it is not a prediction of rankings.
+
+| Area | What this skill can verify |
+|------|----------------------------|
+| Crawl and index controls | Technical configuration and consistency |
+| Rendered metadata and semantics | Presence, validity, and page-template issues |
+| Structured data | Syntax and eligibility signals, not guaranteed rich results |
+| Core Web Vitals | Link to measured field/lab evidence from the Core Web Vitals skill |
+| Content usefulness and authority | Review quality, but do not assign synthetic ranking percentages |
 
 ---
 
@@ -154,11 +161,13 @@ X-Frame-Options: DENY
 ```
 
 **Title tag guidelines:**
-- 50-60 characters (Google truncates ~60)
-- Primary keyword near the beginning
+- Use 50–60 characters only as a rough linting proxy, not a pass/fail limit. Google truncates title links to fit the rendered device width, so preview width when tooling supports it.
+- Describe the page topic naturally near the beginning
 - Unique for every page
-- Brand name at end (unless homepage)
+- Add the brand when it helps users distinguish the result
 - Action-oriented when appropriate
+
+Treat title-link rewriting separately from truncation. Google may build a different title link from the visible page title, headings, anchor text, and other sources even when the `<title>` is short; investigate accuracy and consistency rather than shortening it automatically. See [Google's title-link guidance](https://developers.google.com/search/docs/appearance/title-link).
 
 ### Meta descriptions
 
@@ -171,8 +180,8 @@ X-Frame-Options: DENY
 ```
 
 **Meta description guidelines:**
-- 150-160 characters
-- Include primary keyword naturally
+- Use roughly 150–160 characters only as a linting proxy. Snippets are query- and device-dependent, and Google may select page content instead of the meta description.
+- Use the page topic naturally
 - Compelling call-to-action
 - Unique for every page
 - Matches page content
@@ -195,7 +204,7 @@ X-Frame-Options: DENY
 ```
 
 **Heading guidelines:**
-- Single `<h1>` per page (the main topic)
+- Make the primary page heading descriptive and the hierarchy unambiguous; do not fail a page solely because valid HTML contains more than one `<h1>`
 - Logical hierarchy (don't skip levels)
 - Include keywords naturally
 - Descriptive, not generic
@@ -244,167 +253,38 @@ X-Frame-Options: DENY
 
 ## Structured data (JSON-LD)
 
-### Organization
+Read [the structured data reference](references/STRUCTURED-DATA.md) when the user requests schema markup or an audit surfaces a structured-data issue. It contains Organization, Article, Product, FAQ, and Breadcrumb examples plus validation links.
 
-```html
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Example Company",
-  "url": "https://example.com",
-  "logo": "https://example.com/logo.png",
-  "sameAs": [
-    "https://twitter.com/example",
-    "https://linkedin.com/company/example"
-  ],
-  "contactPoint": {
-    "@type": "ContactPoint",
-    "telephone": "+1-555-123-4567",
-    "contactType": "customer service"
-  }
-}
-</script>
-```
+* **Describe visible, accurate content.** Do not add a type or claim solely to obtain a rich result.
+* **Use the most specific applicable type.** Keep identifiers and absolute URLs stable across renders.
+* **Validate rendered output.** Passing syntax does not guarantee search-engine eligibility or display.
 
-### Article
+## Agentic browsing and AI discoverability
 
-```html
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Article",
-  "headline": "How to Choose the Right Widget",
-  "description": "Complete guide to selecting widgets for your needs.",
-  "image": "https://example.com/article-image.jpg",
-  "author": {
-    "@type": "Person",
-    "name": "Jane Smith",
-    "url": "https://example.com/authors/jane-smith"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "Example Blog",
-    "logo": {
-      "@type": "ImageObject",
-      "url": "https://example.com/logo.png"
-    }
-  },
-  "datePublished": "2024-01-15",
-  "dateModified": "2024-01-20"
-}
-</script>
-```
+Keep these concepts separate:
 
-### Product
+* **Lighthouse Agentic Browsing** measures technical signals that help an assistant understand and interact with the rendered page. Current checks include the agent-facing accessibility tree, optional `llms.txt`, and WebMCP registrations, schemas, and form coverage when present.
+* **Search indexing and ranking** depend on search-engine systems and cannot be inferred from the Agentic Browsing score.
+* **AI ingestion or citation** is product-specific. A technically browsable page or valid `llms.txt` file does not prove that an AI product will ingest, rank, or cite it.
 
-```html
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": "Blue Widget Pro",
-  "image": "https://example.com/blue-widget.jpg",
-  "description": "Premium blue widget with advanced features.",
-  "brand": {
-    "@type": "Brand",
-    "name": "WidgetCo"
-  },
-  "offers": {
-    "@type": "Offer",
-    "price": "49.99",
-    "priceCurrency": "USD",
-    "availability": "https://schema.org/InStock",
-    "url": "https://example.com/products/blue-widget"
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.8",
-    "reviewCount": "1250"
-  }
-}
-</script>
-```
+Prioritize semantic HTML, descriptive labels, crawlable content, accurate metadata, and clear page structure because they benefit people, search engines, and agents. Add WebMCP tools only when the application has useful actions to expose and the user wants that integration; validate tool names, descriptions, schemas, and form annotations with Lighthouse.
 
-### FAQ
+### Crawler controls are product-specific
 
-```html
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "What colors are available?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Our widgets come in blue, red, and green."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "What is the warranty?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "All widgets include a 2-year warranty."
-      }
-    }
-  ]
-}
-</script>
-```
+Audit each documented user agent separately instead of applying a blanket "AI bot" rule:
 
-### Breadcrumbs
+| Control | Documented purpose | Effect of blocking |
+|---------|--------------------|--------------------|
+| `OAI-SearchBot` | ChatGPT search discovery | Prevents page content from being included in ChatGPT summaries and snippets; a link and title may still surface through third-party discovery |
+| `PerplexityBot` | Perplexity search indexing | Prevents that crawler from indexing the blocked content for search results |
+| `Claude-SearchBot` / `Claude-User` | Claude search indexing / user-directed retrieval | May reduce search visibility / prevents retrieval for user-directed requests |
+| `Google-Extended` | Controls certain Gemini training and grounding uses of content Google crawls | Does not affect Google Search inclusion or ranking |
 
-```html
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": "https://example.com"
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Products",
-      "item": "https://example.com/products"
-    },
-    {
-      "@type": "ListItem",
-      "position": 3,
-      "name": "Blue Widgets",
-      "item": "https://example.com/products/blue-widgets"
-    }
-  ]
-}
-</script>
-```
+Training controls such as `GPTBot` and `ClaudeBot` are distinct from search and user-fetch controls. `GoogleOther` is a generic crawler, not an AI-search visibility switch. Verify current names and consequences in the vendors' maintained documentation: [OpenAI](https://help.openai.com/en/articles/12627856-publishers-and-developers-faq), [Perplexity](https://docs.perplexity.ai/docs/resources/perplexity-crawlers), [Anthropic](https://privacy.anthropic.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler), and [Google](https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers).
 
-### Validation
+### `llms.txt` is optional
 
-Test structured data at:
-- [Google Rich Results Test](https://search.google.com/test/rich-results)
-- [Schema.org Validator](https://validator.schema.org/)
-
----
-
-## AI search visibility (emerging)
-
-A class of AI search engines (ChatGPT search, Perplexity, Gemini Overviews) cite web pages from their training and retrieval pipelines, not from the classic ranked results. As of 2026 this is an unstable area — there are no confirmed ranking signals — but a few things are low-cost and won't hurt:
-
-- **Don't block AI crawlers wholesale.** `OAI-SearchBot`, `PerplexityBot`, `GoogleOther`, `Google-Extended`, `ClaudeBot`, etc. each have separate `robots.txt` user-agents. Decide per-bot rather than blanket-blocking — a `Disallow` removes you from that bot's citations.
-- **Lean on schema.org `Article`/`Product`/`FAQPage`.** AI summarizers parse structured data more reliably than they parse prose layouts. The structured-data examples above are the same ones that help here.
-- **Make first-paragraph answers self-contained.** Both featured snippets and AI summaries pull short, coherent passages. A definition or direct answer in the first 1-2 sentences is more extractable than the same content buried under marketing prose.
-
-### `llms.txt` — emerging, unproven
-
-[`llms.txt`](https://llmstxt.org/) is a proposed convention (a Markdown index of your site's important pages, served at `/llms.txt`) for LLMs to consume. As of mid-2026 adoption is ~0.015% of sites and **no major AI vendor has confirmed they read it**. Treat it as a 5-minute speculative add for content sites — not a meaningful ranking or citation factor — and don't reorganize content around it.
+`llms.txt` is an experimental proposal, not a cross-vendor discovery standard. Lighthouse can validate the availability and shape of `/llms.txt`, but that does not show that a target product reads it. Add one only when the user requests it or a documented consumer supports it; do not recommend it ahead of crawlability, semantic HTML, accurate metadata, and useful content. Never treat it as a ranking or citation factor, duplicate the sitemap, or reorganize content solely to raise this audit.
 
 ---
 
@@ -484,7 +364,7 @@ body {
 - [ ] robots.txt allows crawling
 - [ ] No `noindex` on important pages
 - [ ] Title tags present and unique
-- [ ] Single `<h1>` per page
+- [ ] Primary page heading is descriptive and the hierarchy is logical
 
 ### High priority
 - [ ] Meta descriptions present
@@ -499,6 +379,7 @@ body {
 - [ ] Image alt text
 - [ ] Descriptive URLs
 - [ ] Breadcrumb navigation
+- [ ] Agentic Browsing failures reviewed when agent access matters
 
 ### Ongoing
 - [ ] Fix crawl errors in Search Console
@@ -516,7 +397,8 @@ body {
 | Google Search Console | Monitor indexing, fix issues |
 | Google PageSpeed Insights | Performance + Core Web Vitals |
 | Rich Results Test | Validate structured data |
-| Lighthouse | Full SEO audit |
+| Live Lighthouse audit (Chrome DevTools MCP: `lighthouse_audit`) | Rendered SEO and Agentic Browsing checks for agents |
+| Lighthouse CLI | SEO audit fallback |
 | Screaming Frog | Crawl analysis |
 
 ## References
