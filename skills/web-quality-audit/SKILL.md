@@ -1,28 +1,43 @@
 ---
 name: web-quality-audit
-description: Comprehensive web quality audit covering performance, accessibility, SEO, and best practices. Use when asked to "audit my site", "review web quality", "run lighthouse audit", "check page quality", or "optimize my website".
+description: Run an evidence-led web quality audit covering performance, accessibility, SEO, best practices, and agentic browsing. Use when asked to "audit my site", "review web quality", "run lighthouse audit", "check page quality", or "optimize my website".
 license: MIT
 metadata:
   author: web-quality-skills
-  version: "1.0"
+  version: "2.0"
 ---
 
 # Web quality audit
 
-Comprehensive quality review based on Google Lighthouse audits. Covers Performance, Accessibility, SEO, and Best Practices across 150+ checks.
+Comprehensive quality review that combines live browser evidence with source inspection. Covers Performance, Accessibility, SEO, Best Practices, and Agentic Browsing without treating an aggregate score as proof of quality.
 
-> **Lighthouse v13 note (Oct 2025+).** Lighthouse has migrated the Performance category from per-opportunity audits to **Performance Insight Audits** ([announcement](https://developer.chrome.com/blog/moving-lighthouse-to-insights)). Several individual audit names this skill historically referenced — *First Meaningful Paint*, *No Document Write*, *Uses Passive Event Listeners*, *Uses Rel Preload* — have been removed or merged. The underlying *advice* is unchanged and still applies; only the report format moved. The CLS-related audits ("layout shifts", "non-composited animations", "unsized images") are now consolidated into a single `cls-culprits-insight`, and image audits are merged into `image-delivery-insight`. Treat older Lighthouse JSON output as a superset, not a contradiction.
+> **Lighthouse 13+.** The Performance category now uses shared **Performance Insights** across Lighthouse and the DevTools Performance panel ([announcement](https://developer.chrome.com/blog/moving-lighthouse-to-insights)). Follow current insight names and evidence. Do not require removed audit IDs or automatically recreate their recommendations; some were retired because they were noisy, inactionable, or easy to over-recommend.
 
 ## How it works
 
-1. Analyze the provided code/project for quality issues
-2. Categorize findings by severity (Critical, High, Medium, Low)
-3. Provide specific, actionable recommendations
-4. Include code examples for fixes
+1. Establish the audit target: representative URLs, important states and journeys, public versus authenticated access, and mobile/desktop scope.
+2. If a page can run, read [the measurement workflow](../performance/references/MEASUREMENT.md) and collect a minimal live baseline before searching the codebase broadly.
+3. Use runtime failures to localize source inspection. Keep measured findings separate from hypotheses found only in code.
+4. Categorize by user impact and confidence, then make or recommend specific fixes.
+5. Re-run equivalent automated checks and the affected manual flows. Report what is verified and what still needs field or human validation.
+
+## Tool routing
+
+Use the best capability already available; do not block the audit on optional setup.
+
+| Need | Preferred route | Fallback |
+|------|-----------------|----------|
+| Performance and Core Web Vitals | Chrome DevTools MCP `performance_start_trace`, then focused `performance_analyze_insight` calls | Lighthouse CLI or PageSpeed Insights lab data |
+| Real-user performance | CrUX values included in current DevTools trace summaries | PageSpeed Insights/CrUX Vis; direct CrUX API only when a key is already available or automation is requested |
+| Accessibility, SEO, Best Practices, Agentic Browsing | Chrome DevTools MCP `lighthouse_audit` | Category-specific Lighthouse CLI audits plus manual checks |
+| Rendered semantics and interaction | `take_snapshot`, keyboard interaction, focused `evaluate_script` | Browser/manual testing |
+| Source smoke test | `scripts/analyze.sh <path>` | Direct source inspection |
+
+`lighthouse_audit` intentionally excludes performance. Its navigation mode reloads the page; use snapshot mode when preserving the current authenticated or user-created state matters. The static analyzer is a fast smoke test, not a substitute for a rendered-page audit.
 
 ## Audit categories
 
-### Performance (40% of typical issues)
+### Performance
 
 **Core Web Vitals** — Must pass for good page experience:
 * **LCP (Largest Contentful Paint) < 2.5s.** The largest visible element must render quickly. Optimize images, fonts, and server response time.
@@ -41,7 +56,7 @@ Comprehensive quality review based on Google Lighthouse audits. Covers Performan
 * **Lazy load below-fold content.** Images, iframes, and heavy components.
 * **Cache effectively.** Long cache TTLs for static assets. Immutable caching for hashed files.
 
-### Accessibility (30% of typical issues)
+### Accessibility
 
 **Perceivable:**
 * **Text alternatives.** Every `<img>` has meaningful `alt` text. Decorative images use `alt=""`.
@@ -66,7 +81,7 @@ Comprehensive quality review based on Google Lighthouse audits. Covers Performan
 * **ARIA used correctly.** Prefer native elements. ARIA roles match behavior.
 * **Name, role, value.** Interactive elements have accessible names and correct roles.
 
-### SEO (15% of typical issues)
+### SEO
 
 **Crawlability:**
 * **Valid robots.txt.** Doesn't block important resources.
@@ -75,18 +90,18 @@ Comprehensive quality review based on Google Lighthouse audits. Covers Performan
 * **No noindex on important pages.** Check meta robots and headers.
 
 **On-Page SEO:**
-* **Unique title tags.** 50-60 characters. Primary keyword included.
-* **Meta descriptions.** 150-160 characters. Compelling and unique.
+* **Unique title tags.** Make each title descriptive and concise; display truncation varies by device and result type.
+* **Meta descriptions.** Write useful, page-specific summaries; search engines may choose a different snippet.
 * **Heading hierarchy.** Single `<h1>`. Logical heading structure.
 * **Descriptive link text.** Not "click here" or "read more".
 
 **Technical SEO:**
 * **Mobile-friendly.** Responsive design. Tap targets ≥ 48px.
 * **HTTPS.** Secure connection required.
-* **Fast loading.** Performance directly impacts ranking.
+* **Page experience signals.** Use field Core Web Vitals as evidence, without promising a ranking change.
 * **Structured data.** JSON-LD for rich snippets (Article, Product, FAQ, etc.).
 
-### Best practices (15% of typical issues)
+### Best practices
 
 **Security:**
 * **HTTPS everywhere.** No mixed content. HSTS enabled.
@@ -105,6 +120,15 @@ Comprehensive quality review based on Google Lighthouse audits. Covers Performan
 * **Clear permission requests.** Only ask when needed, with context.
 * **No misleading buttons.** Buttons do what they say.
 
+### Agentic browsing
+
+Use the Lighthouse Agentic Browsing results as technical signals for how well assistants can understand and interact with the rendered page.
+
+* **Accessible interaction surface.** Semantic HTML, labels, names, roles, and states must expose meaningful controls in the accessibility tree.
+* **WebMCP integrations are valid when present.** Review registered tools, schemas, and form coverage; do not add WebMCP solely to raise an audit score.
+* **`llms.txt` is optional.** A valid file may help compatible tools discover curated content, but a Lighthouse pass does not prove that search or AI products will ingest, rank, or cite it.
+* **Keep this category separate from SEO claims.** Agentic browsability is not evidence of search ranking or AI visibility.
+
 ## Severity levels
 
 | Level | Description | Action |
@@ -121,24 +145,37 @@ When performing an audit, structure findings as:
 ```markdown
 ## Audit results
 
+### Evidence
+| Signal | Scope/conditions | Result | Source |
+|--------|------------------|--------|--------|
+| LCP | URL, phone, p75/28 days | 3.1s (needs improvement) | CrUX |
+| Accessibility | URL, mobile navigation | 92 | Lighthouse |
+
 ### Critical issues (X found)
 - **[Category]** Issue description. File: `path/to/file.js:123`
   - **Impact:** Why this matters
+  - **Evidence:** Measured failure, runtime observation, or source hypothesis
   - **Fix:** Specific code change or recommendation
 
 ### High priority (X found)
 ...
 
 ### Summary
-- Performance: X issues (Y critical)
-- Accessibility: X issues (Y critical)
-- SEO: X issues
-- Best Practices: X issues
+- Performance: measured status and X findings
+- Accessibility: automated status, X findings, manual checks pending/passed
+- SEO: X findings
+- Best Practices: X findings
+- Agentic Browsing: X findings or not available
 
 ### Recommended priority
 1. First fix this because...
 2. Then address...
 3. Finally optimize...
+
+### Verification
+- Re-run results under the same conditions
+- Manual checks completed
+- Field validation still pending
 ```
 
 ## Quick checklist

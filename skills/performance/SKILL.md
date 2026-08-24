@@ -4,30 +4,36 @@ description: Optimize web performance for faster loading and better user experie
 license: MIT
 metadata:
   author: web-quality-skills
-  version: "1.0"
+  version: "2.0"
 ---
 
 # Performance optimization
 
-Deep performance optimization based on Lighthouse performance audits. Focuses on loading speed, runtime efficiency, and resource optimization.
+Evidence-led performance optimization using real-user signals for prioritization and browser traces for diagnosis. Focuses on loading speed, runtime responsiveness, and resource delivery.
 
 ## How it works
 
-1. Identify performance bottlenecks in code and assets
-2. Prioritize by impact on Core Web Vitals
-3. Provide specific optimizations with code examples
-4. Measure improvement with before/after metrics
+1. If a page can run, read [the measurement workflow](references/MEASUREMENT.md) and establish a field-plus-lab baseline before editing.
+2. Prioritize poor real-user Core Web Vitals. Use a DevTools performance trace and its focused insights to find the cause.
+3. Inspect and change only the code or assets connected to measured bottlenecks.
+4. Re-run equivalent lab measurements and report before/after values, conditions, and uncertainty. Field verification remains pending until enough new user data arrives.
 
-## Performance budget
+When no runnable page exists, perform static inspection but call findings **hypotheses**, not measured regressions. Include the command or browser workflow that can verify each high-impact hypothesis.
+
+Chrome DevTools MCP is the preferred path when its tools are available: use `performance_start_trace` for performance and Core Web Vitals, not `lighthouse_audit`. The latter currently covers Accessibility, SEO, Best Practices, and Agentic Browsing and deliberately excludes performance.
+
+## Starting performance budget
+
+Budgets must reflect the product's target devices, networks, page types, and user journeys. The values below are initial guardrails for a typical content or commerce page, not universal pass/fail criteria. Preserve an existing project budget when one is already defined.
 
 | Resource | Budget | Rationale |
 |----------|--------|-----------|
-| Total page weight | < 1.5 MB | 3G loads in ~4s |
-| JavaScript (compressed) | < 300 KB | Parsing + execution time |
-| CSS (compressed) | < 100 KB | Render blocking |
-| Images (above-fold) | < 500 KB | LCP impact |
-| Fonts | < 100 KB | FOIT/FOUT prevention |
-| Third-party | < 200 KB | Uncontrolled latency |
+| Total page weight | < 1.5 MB | Starting transfer guardrail |
+| JavaScript (compressed) | < 300 KB | Protect parse and execution cost |
+| CSS (compressed) | < 100 KB | Limit render-blocking work |
+| Images (above-fold) | < 500 KB | Protect likely LCP resources |
+| Fonts | < 100 KB | Limit critical font transfer |
+| Third-party | < 200 KB | Bound code outside product control |
 
 ## Critical rendering path
 
@@ -36,7 +42,7 @@ Deep performance optimization based on Lighthouse performance audits. Focuses on
 * **Enable compression.** Gzip or Brotli for text assets. Brotli preferred (15-20% smaller).
 * **HTTP/2 or HTTP/3.** Multiplexing reduces connection overhead.
 * **Edge caching.** Cache HTML at CDN edge when possible.
-* **Send Early Hints (HTTP 103) for slow origins.** When the origin needs hundreds of milliseconds to assemble the final response, return a `103 Early Hints` with `Link: </hero.webp>; rel=preload; as=image` (and similar for critical CSS/fonts) so the browser starts fetching before the `200 OK` lands. Cloudflare reports [20–30% LCP improvements](https://blog.cloudflare.com/early-hints-performance/) on image-heavy pages. Requires HTTP/2+ and is supported by Chromium-based browsers; other browsers ignore the 103 and fall through to the 200 — safe to enable. CDNs (Cloudflare, Fastly, Akamai) can synthesize 103s automatically from prior responses; on your own origin, emit them from the same handler that issues the 200.
+* **Consider Early Hints (HTTP 103) for measured document latency.** If a trace shows slow HTML generation and stable critical subresources, Early Hints can let the browser start those requests before the final response. Limit hints to resources proven to be critical and measure the result; inaccurate hints waste bandwidth and can compete with the actual LCP resource.
 
 ### Resource loading
 
@@ -47,6 +53,9 @@ Deep performance optimization based on Lighthouse performance audits. Focuses on
 ```
 
 **Preload critical resources:**
+
+Preload only resources whose late discovery is visible in the trace. Each preload competes for bandwidth and an unnecessary high-priority request can delay LCP.
+
 ```html
 <!-- LCP image -->
 <link rel="preload" href="/hero.webp" as="image" fetchpriority="high">
@@ -66,7 +75,7 @@ Deep performance optimization based on Lighthouse performance audits. Focuses on
 }
 </script>
 ```
-`moderate` triggers after a ~200ms hover — usually intent-correlated, rarely wasted. See [core-web-vitals → LCP](../core-web-vitals/SKILL.md#lcp-largest-contentful-paint) for the full discussion of eagerness tradeoffs and the `prerenderingchange` gating you'll need for analytics.
+`moderate` waits for a stronger intent signal than eager modes. Measure prediction hit rate, transferred bytes, and server cost; a wrong prerender is roughly an unused navigation. See [core-web-vitals → LCP](../core-web-vitals/SKILL.md#lcp-largest-contentful-paint) for the tradeoffs and the `prerenderingchange` gating needed for analytics.
 
 **Defer non-critical CSS:**
 ```html
@@ -374,26 +383,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 ## Measurement
 
-### Key metrics
-| Metric | Target | Tool |
-|--------|--------|------|
-| LCP | < 2.5s | Lighthouse, CrUX |
-| FCP | < 1.8s | Lighthouse |
-| Speed Index | < 3.4s | Lighthouse |
-| TBT | < 200ms | Lighthouse |
-| TTI | < 3.8s | Lighthouse |
+Use [the measurement workflow](references/MEASUREMENT.md) whenever a URL is runnable. It defines Chrome DevTools MCP routing, CrUX and fallback sources, repeatable lab conditions, and a compact evidence format.
 
-### Testing commands
-```bash
-# Lighthouse CLI
-npx lighthouse https://example.com --output html --output-path report.html
+| Metric | Kind | Interpretation |
+|--------|------|----------------|
+| LCP, INP, CLS at p75 | Field | User-outcome Core Web Vitals; use for pass/fail prioritization |
+| LCP, CLS in a trace | Lab | Reproducible diagnostic values for one navigation |
+| TBT | Lab | Main-thread blocking diagnostic and a rough INP proxy, not field INP |
+| FCP, Speed Index | Lab | Loading diagnostics, not Core Web Vitals |
 
-# Web Vitals library
-import {onLCP, onINP, onCLS} from 'web-vitals';
-onLCP(console.log);
-onINP(console.log);
-onCLS(console.log);
-```
+Raw `PerformanceObserver` snippets are useful for the current browser session but are not real-user data by themselves. When the user wants production telemetry, read [the first-party RUM reference](references/RUM.md) and prefer `web-vitals` over a hand-rolled metric implementation.
 
 ## References
 

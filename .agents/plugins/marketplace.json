@@ -3,7 +3,7 @@
   "plugins": [
     {
       "name": "web-quality-skills",
-      "description": "Agent Skills for optimizing web projects against Google Lighthouse, Core Web Vitals, WCAG 2.2, and modern SEO.",
+      "description": "Measurement-first Agent Skills for Lighthouse, Chrome DevTools, Core Web Vitals, WCAG 2.2, SEO, and agentic browsing.",
       "source": {
         "source": "local",
         "path": "./codex"

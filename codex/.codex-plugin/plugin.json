@@ -1,7 +1,7 @@
 {
   "name": "web-quality-skills",
-  "version": "1.0.0",
-  "description": "Agent Skills for optimizing web projects against Google Lighthouse, Core Web Vitals, WCAG 2.2, and modern SEO — performance, accessibility, SEO, and best practices.",
+  "version": "2.0.0",
+  "description": "Measurement-first Agent Skills for Lighthouse, Chrome DevTools, Core Web Vitals, WCAG 2.2, SEO, and agentic browsing.",
   "author": {
     "name": "Addy Osmani",
     "url": "https://github.com/addyosmani"
@@ -12,7 +12,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Web Quality Skills",
-    "shortDescription": "Lighthouse, Core Web Vitals, accessibility, SEO, and best-practices skills for web projects.",
+    "shortDescription": "Measured Lighthouse, Core Web Vitals, accessibility, SEO, and agentic web quality.",
     "category": "Productivity"
   }
 }

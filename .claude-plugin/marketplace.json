@@ -4,13 +4,13 @@
     "name": "Addy Osmani"
   },
   "metadata": {
-    "description": "Agent Skills for optimizing web projects against Google Lighthouse, Core Web Vitals, WCAG 2.2, and modern SEO."
+    "description": "Measurement-first Agent Skills for Lighthouse, Chrome DevTools, Core Web Vitals, WCAG 2.2, SEO, and agentic browsing."
   },
   "plugins": [
     {
       "name": "web-quality-skills",
       "source": "./",
-      "description": "Performance, Core Web Vitals, accessibility, SEO, and best-practices skills for any web stack."
+      "description": "Measured performance, Core Web Vitals, accessibility, SEO, best-practices, and agentic browsing skills for any web stack."
     }
   ]
 }

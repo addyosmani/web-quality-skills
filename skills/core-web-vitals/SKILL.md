@@ -4,12 +4,23 @@ description: Optimize Core Web Vitals (LCP, INP, CLS) for better page experience
 license: MIT
 metadata:
   author: web-quality-skills
-  version: "1.0"
+  version: "2.0"
 ---
 
 # Core Web Vitals optimization
 
-Targeted optimization for the three Core Web Vitals metrics that affect Google Search ranking and user experience.
+Targeted optimization for the three Core Web Vitals using field data to identify user impact and browser traces to diagnose causes.
+
+## Measure before optimizing
+
+When a runnable URL is available, read [the performance measurement workflow](../performance/references/MEASUREMENT.md). Prefer this sequence:
+
+1. Check page-level CrUX p75 data, with a clearly labeled origin fallback when page data is unavailable.
+2. Record a Chrome DevTools performance trace under stated conditions. Current Chrome DevTools MCP trace summaries can include CrUX alongside the observed lab metrics.
+3. Analyze only the insights associated with the failing metric, then inspect the implicated code and resources.
+4. Re-run equivalent lab measurements after the fix. Do not claim an immediate field improvement; CrUX and first-party RUM need new user visits.
+
+If only source code is available, identify likely causes but do not claim that LCP, INP, or CLS is failing without runtime evidence.
 
 ## The three metrics
 
@@ -51,13 +62,15 @@ Fix: CDN, caching, optimized backend, edge rendering
 
 **3. Slow resource load times**
 ```html
-<!-- ❌ No hints, discovered late -->
-<img src="/hero.jpg" alt="Hero">
+<!-- ❌ LCP image is discovered only after a stylesheet loads -->
+<div class="hero"></div>
 
-<!-- ✅ Preloaded with high priority -->
+<!-- ✅ Discoverable in initial HTML and prioritized -->
 <link rel="preload" href="/hero.webp" as="image" fetchpriority="high">
 <img src="/hero.webp" alt="Hero" fetchpriority="high">
 ```
+
+Prefer a discoverable `<img>` with `fetchpriority="high"`. Add the preload only when the trace shows that the resource would otherwise be discovered late; duplicate or speculative preloads can compete for bandwidth.
 
 **4. Client-side rendering delays**
 ```javascript
@@ -76,7 +89,7 @@ export async function getServerSideProps() {
 
 **5. Make navigations instant with the Speculation Rules API**
 
-For most sites, the LCP a user actually experiences is dominated by *the next page they navigate to*, not the one they landed on. Telling the browser to prerender likely-next pages on hover collapses that LCP to ~0ms.
+For sites with predictable same-origin journeys, prerendering a likely next page can make a successful subsequent navigation much faster. Treat this as a measured navigation optimization, not a substitute for fixing the current page's LCP.
 
 ```html
 <script type="speculationrules">
@@ -89,7 +102,7 @@ For most sites, the LCP a user actually experiences is dominated by *the next pa
 </script>
 ```
 
-`eagerness` settings (cheapest → most aggressive): `conservative` (start on pointerdown), `moderate` (start after ~200ms hover), `eager` (start as soon as the link is in the viewport), `immediate` (start on page load). Start with `moderate` — it captures most navigations without prerendering pages users never visit.
+`eagerness` settings range from stronger intent signals (`conservative`, `moderate`) to earlier speculation (`eager`, `immediate`). Start conservatively and measure prediction hit rate, transferred bytes, server load, and navigation improvement before expanding the rules.
 
 Caveats:
 - **Bandwidth/CPU cost.** Each prerender is roughly a full page load. Scope `where` carefully (`href_matches` patterns, exclude logout/checkout) and avoid `immediate` outside small sites.
@@ -100,7 +113,7 @@ Caveats:
 
 ```markdown
 - [ ] TTFB < 800ms (use CDN, edge caching)
-- [ ] LCP image preloaded with fetchpriority="high"
+- [ ] LCP resource is discoverable in initial HTML and prioritized; preload only if the trace shows late discovery
 - [ ] LCP image optimized (WebP/AVIF, correct size)
 - [ ] Critical CSS inlined (< 14KB)
 - [ ] No render-blocking JavaScript in <head>
@@ -110,6 +123,9 @@ Caveats:
 ```
 
 ### LCP element identification
+
+This snippet diagnoses the current page session. It is not field data.
+
 ```javascript
 // Find your LCP element
 new PerformanceObserver((list) => {
@@ -254,6 +270,9 @@ function App() {
 ```
 
 ### INP debugging
+
+This snippet diagnoses interactions performed in the current page session. It is not a substitute for field INP.
+
 ```javascript
 // Identify slow interactions. durationThreshold: 40 matches what the
 // web-vitals library uses — 16 (one frame) fires on nearly every interaction
@@ -389,6 +408,9 @@ if (insertBelow) {
 ```
 
 ### CLS debugging
+
+This snippet diagnoses shifts observed in the current page session. It does not represent the distribution of real visits.
+
 ```javascript
 // Track layout shifts
 new PerformanceObserver((list) => {
@@ -407,33 +429,19 @@ new PerformanceObserver((list) => {
 
 ---
 
-## Measurement tools
+## Measurement sources
 
-### Lab testing
-- **Chrome DevTools** → Performance panel, Lighthouse
-- **WebPageTest** → Detailed waterfall, filmstrip
-- **Lighthouse CLI** → `npx lighthouse <url>`
+| Source | Use |
+|--------|-----|
+| Chrome DevTools MCP `performance_start_trace` | Observe one load or interaction and diagnose Performance Insights; use the included CrUX context when available |
+| CrUX or Search Console | Prioritize aggregated real-user outcomes at p75 |
+| Lighthouse CLI or PageSpeed Insights | Controlled lab fallback when DevTools tools are unavailable |
+| First-party RUM | Segment current production experience by route, device, release, and attribution |
+| Raw `PerformanceObserver` | Inspect one page session during debugging |
 
-### Field data (real users)
-- **Chrome User Experience Report (CrUX)** → BigQuery or API
-- **Search Console** → Core Web Vitals report
-- **web-vitals library** → Send to your analytics
+Do not use `lighthouse_audit` for performance when working through Chrome DevTools MCP; that tool intentionally covers non-performance Lighthouse categories. Do not compare a single lab value directly with a field p75 as if they were equivalent samples.
 
-```javascript
-import {onLCP, onINP, onCLS} from 'web-vitals';
-
-function sendToAnalytics({name, value, rating}) {
-  gtag('event', name, {
-    event_category: 'Web Vitals',
-    value: Math.round(name === 'CLS' ? value * 1000 : value),
-    event_label: rating
-  });
-}
-
-onLCP(sendToAnalytics);
-onINP(sendToAnalytics);
-onCLS(sendToAnalytics);
-```
+When adding or reviewing production collection, read [the first-party RUM reference](../performance/references/RUM.md). Prefer the `web-vitals` library because raw browser APIs do not by themselves implement every Core Web Vital's lifecycle and reporting rules.
 
 ---
 
@@ -477,6 +485,7 @@ startTransition(() => setExpensiveState(newValue));
 
 ## References
 
+- [Detailed LCP optimization](references/LCP.md) — read when an LCP trace points to discovery, loading, or render delay
 - [web.dev LCP](https://web.dev/articles/lcp)
 - [web.dev INP](https://web.dev/articles/inp)
 - [web.dev CLS](https://web.dev/articles/cls)

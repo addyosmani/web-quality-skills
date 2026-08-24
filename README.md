@@ -1,16 +1,17 @@
 # Web Quality Skills
 
-An (unofficial) comprehensive collection of [Agent Skills](https://agentskills.io/) for optimizing web projects based on [Google Lighthouse](https://developer.chrome.com/docs/lighthouse/overview/) guidelines and Core Web Vitals best practices.
+An (unofficial) measurement-first collection of [Agent Skills](https://agentskills.io/) for optimizing web projects with [Google Lighthouse](https://developer.chrome.com/docs/lighthouse/overview/), Chrome DevTools for agents, Core Web Vitals, WCAG, and search guidance.
 
 **Stack-agnostic.** Works with any framework: React, Vue, Angular, Svelte, Next.js, Nuxt, Astro, plain HTML, and more.
 
 ## Why web quality skills?
 
-While interface guidelines tell you *what* to build, Web Quality Skills tell you *how* to build it performantly, accessibly, and optimally for search engines. These skills encode the collective wisdom from:
+While interface guidelines tell you *what* to build, Web Quality Skills tell you *how* to build it performantly, accessibly, and optimally for search engines. These skills combine:
 
-- **150+ Lighthouse audits** across Performance, Accessibility, SEO, and Best Practices
-- **Core Web Vitals** optimization patterns (LCP, INP, CLS)
-- **Real-world performance engineering** experience
+- **Live Lighthouse audits for agents** across Accessibility, SEO, Best Practices, and Agentic Browsing when Chrome DevTools MCP is available
+- **Performance traces and Insights** for diagnosing LCP, INP, CLS, network, and main-thread bottlenecks
+- **Field plus lab measurement** using CrUX for real-user context and controlled browser runs for repeatable diagnosis
+- **Core Web Vitals** optimization patterns for LCP, INP, and CLS
 - **WCAG 2.2** accessibility standards
 - **Modern SEO** requirements
 
@@ -18,12 +19,25 @@ While interface guidelines tell you *what* to build, Web Quality Skills tell you
 
 | Skill | Description | Use when |
 |-------|-------------|----------|
-| **[web-quality-audit](#web-quality-audit)** | Comprehensive quality review across all categories | "Audit my site", "Review this for quality", "Check web quality" |
-| **[performance](#performance)** | Loading speed, runtime efficiency, resource optimization | "Optimize performance", "Speed up my site", "Fix slow loading" |
-| **[core-web-vitals](#core-web-vitals)** | LCP, INP, CLS specific optimizations | "Improve Core Web Vitals", "Fix LCP", "Reduce CLS" |
+| **[web-quality-audit](#web-quality-audit)** | Evidence-led review across Lighthouse and source categories | "Audit my site", "Review this for quality", "Check web quality" |
+| **[performance](#performance)** | Field/lab measurement, traces, loading and runtime fixes | "Optimize performance", "Speed up my site", "Fix slow loading" |
+| **[core-web-vitals](#core-web-vitals)** | Measured LCP, INP, and CLS diagnosis and optimization | "Improve Core Web Vitals", "Fix LCP", "Reduce CLS" |
 | **[accessibility](#accessibility)** | WCAG compliance, screen reader support, keyboard navigation | "Improve accessibility", "WCAG audit", "a11y review" |
 | **[seo](#seo)** | Search engine optimization, crawlability, structured data | "Optimize for SEO", "Improve search ranking", "Fix meta tags" |
 | **[best-practices](#best-practices)** | Security, modern APIs, code quality patterns | "Apply best practices", "Security audit", "Code quality review" |
+
+## Measurement model
+
+The performance skills keep four evidence types explicit:
+
+| Evidence | Answers |
+|----------|---------|
+| CrUX field data | How eligible real Chrome users experienced the URL or origin over the recent aggregation window |
+| First-party RUM | How the site's own users experience routes, releases, devices, and interactions |
+| DevTools trace or Lighthouse lab run | What happened in one controlled browser session and why |
+| Static source inspection | What might be a problem when the page cannot run |
+
+Field data determines user impact. Lab traces reproduce and diagnose it. A `PerformanceObserver` snippet run in one browser is a lab observation, not real-user data by itself.
 
 ## Quick start
 
@@ -102,24 +116,35 @@ Review accessibility and suggest improvements
 Make this SEO-ready
 ```
 
+### Optional Chrome DevTools integration
+
+When the agent already exposes [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) tools, the skills automatically prefer:
+
+- `performance_start_trace` and focused Performance Insights for performance work, including CrUX context when eligible field data exists
+- `lighthouse_audit` for Accessibility, SEO, Best Practices, and Agentic Browsing
+- rendered accessibility snapshots, console messages, and network requests for issue-level diagnosis
+
+This integration is optional. Without it, the skills fall back to Lighthouse CLI, PageSpeed Insights/CrUX tools, manual browser checks, and static inspection rather than stopping the task.
+
 ## Skill details
 
 ### web-quality-audit
 
-The comprehensive skill that orchestrates all other skills. Use this for full-site audits or when you're unsure which specific area needs attention.
+The comprehensive skill that orchestrates all other skills. It starts with live evidence when a page is runnable and keeps measured failures separate from source-code hypotheses.
 
 **Trigger phrases:** "audit my site", "quality review", "lighthouse audit", "check web quality"
 
 **What it checks:**
 - All Core Web Vitals metrics
-- 50+ performance patterns
-- 40+ accessibility rules
-- 30+ SEO requirements
-- 20+ security/best practice patterns
+- Performance Insights, network delivery, and runtime bottlenecks
+- Automated and manual accessibility signals
+- Crawl, index, metadata, and structured-data requirements
+- Security, compatibility, and browser best-practice patterns
+- Agentic Browsing signals such as agent-facing semantics and optional WebMCP/`llms.txt` checks
 
 ### performance
 
-Deep-dive into loading and runtime performance optimization.
+Deep-dive into loading and runtime performance optimization, using CrUX or first-party RUM to prioritize user impact and DevTools traces to diagnose causes.
 
 **Trigger phrases:** "speed up", "optimize performance", "reduce load time", "fix slow"
 
@@ -190,7 +215,11 @@ Modern web development standards and security practices.
 | INP | ≤ 200ms | 200ms – 500ms | > 500ms |
 | CLS | ≤ 0.1 | 0.1 – 0.25 | > 0.25 |
 
-### Performance budget recommendations
+Field Core Web Vitals are assessed at the 75th percentile; these thresholds are not a claim about a single lab run.
+
+### Starting performance budget recommendations
+
+These are initial guardrails, not universal thresholds. Set budgets from the product's target devices, networks, page types, and user journeys.
 
 | Resource type | Budget |
 |---------------|--------|
@@ -201,12 +230,14 @@ Modern web development standards and security practices.
 | Fonts | < 100 KB |
 | Third-party | < 200 KB |
 
-### Lighthouse score targets
+### Example automated audit guardrails
 
-| Category | Target score |
-|----------|--------------|
+Scores help catch regressions but do not prove accessibility, security, SEO ranking, or user experience. Preserve project-specific targets and compare runs made with the same tool version and conditions.
+
+| Category | Example guardrail |
+|----------|-------------------|
 | Performance | ≥ 90 |
-| Accessibility | 100 |
+| Accessibility | Aim for 100 automated coverage; complete manual checks |
 | Best Practices | ≥ 95 |
 | SEO | ≥ 95 |
 
@@ -233,6 +264,9 @@ Contributions welcome! Please follow the [Agent Skills specification](https://ag
 ## Resources
 
 - [Google Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/)
+- [Lighthouse audits with AI agents](https://developer.chrome.com/docs/devtools/agents/use-cases/lighthouse-audit)
+- [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp)
+- [Chrome UX Report](https://developer.chrome.com/docs/crux/)
 - [web.dev Learn Performance](https://web.dev/learn/performance/)
 - [Core Web Vitals](https://web.dev/articles/vitals)
 - [WCAG 2.2 Guidelines](https://www.w3.org/WAI/WCAG22/quickref/)

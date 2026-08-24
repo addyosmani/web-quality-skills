@@ -31,6 +31,12 @@ After install, the model activates a skill automatically when your prompt matche
 
 Try prompts like _"audit my site for web quality issues"_, _"speed up this page"_, or _"WCAG audit"_ and Gemini will pick the right skill.
 
+## Optional live browser measurements
+
+The extension ships skills, not a bundled browser server. If Gemini already exposes [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp), the skills use performance traces, CrUX context, Lighthouse audits, rendered accessibility snapshots, console messages, and network requests automatically.
+
+Without those tools, the same skills fall back to Lighthouse CLI, PageSpeed Insights/CrUX tools, manual browser checks, and static source inspection. Chrome DevTools MCP is an enhancement, not an installation requirement.
+
 ## How it works
 
 - `gemini-extension.json` — extension manifest at the repo root. Gemini CLI requires this to recognize the directory as an extension.

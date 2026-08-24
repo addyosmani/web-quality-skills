@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working with this repository.
 
 ## Project summary
 
-Web Quality Skills is a collection of Agent Skills for optimizing web projects based on Google Lighthouse guidelines and Core Web Vitals. The skills are framework-agnostic and follow the [Agent Skills specification](https://agentskills.io/specification).
+Web Quality Skills is a measurement-first collection of Agent Skills for Google Lighthouse, Chrome DevTools, Core Web Vitals, accessibility, SEO, best practices, and agentic browsing. The skills are framework-agnostic and follow the [Agent Skills specification](https://agentskills.io/specification).
 
 ## Quick reference
 
@@ -26,6 +26,8 @@ Web Quality Skills is a collection of Agent Skills for optimizing web projects b
 - INP ≤ 200ms  
 - CLS ≤ 0.1
 
+Apply these thresholds to field data at the 75th percentile. A single trace or `PerformanceObserver` result is a lab observation, not real-user data.
+
 **Performance Budgets:**
 - Total: < 1.5 MB
 - JS: < 300 KB
@@ -33,9 +35,18 @@ Web Quality Skills is a collection of Agent Skills for optimizing web projects b
 
 **Lighthouse Targets:**
 - Performance: ≥ 90
-- Accessibility: 100
+- Accessibility: aim for 100 automated coverage, then complete manual checks
 - Best Practices: ≥ 95
 - SEO: ≥ 95
+
+Scores are regression guardrails, not proof of accessibility, security, rankings, or user experience.
+
+### Live audit routing
+
+- Use Chrome DevTools MCP `performance_start_trace` and focused `performance_analyze_insight` calls for performance. Current traces may include CrUX field context.
+- Use `lighthouse_audit` for Accessibility, SEO, Best Practices, and Agentic Browsing; it intentionally excludes performance.
+- Read `skills/performance/references/MEASUREMENT.md` for field/lab fallbacks and repeatable comparisons.
+- When no page can run, label performance findings as source hypotheses and provide a verification workflow.
 
 ## Common tasks
 
@@ -57,7 +68,7 @@ Web Quality Skills is a collection of Agent Skills for optimizing web projects b
 
 ```bash
 # Validate skill format
-npx skills-ref validate skills/
+for skill in skills/*; do npx skills-ref validate "$skill"; done
 
 # Lint markdown
 npx markdownlint skills/**/*.md
