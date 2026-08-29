@@ -6,7 +6,7 @@
       "description": "Measurement-first Agent Skills for Lighthouse, Chrome DevTools, Core Web Vitals, WCAG 2.2, SEO, and agentic browsing.",
       "source": {
         "source": "local",
-        "path": "./codex"
+        "path": "./"
       },
       "policy": {
         "installation": "AVAILABLE",

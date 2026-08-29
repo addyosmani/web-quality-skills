@@ -74,13 +74,19 @@ Skills are then namespaced (e.g. `/web-quality-skills:performance`) and update w
 
 #### Codex
 
-Install directly via the Codex plugin marketplace (Codex CLI v0.122+):
+Install directly via the Codex plugin marketplace (Codex CLI v0.131+):
 
 ```bash
 codex plugin marketplace add addyosmani/web-quality-skills
+codex plugin add web-quality-skills@web-quality-skills
 ```
 
-Once installed, invoke skills in chat using `@` (e.g. `@performance`, `@accessibility`). See [docs/codex-setup.md](docs/codex-setup.md) for local installation and troubleshooting.
+The first command registers the Git marketplace; the second installs and enables the plugin.
+
+Once installed, invoke a namespaced skill with `$` (for example,
+`$web-quality-skills:performance`) or use `/skills` to select one. See
+[docs/codex-setup.md](docs/codex-setup.md) for local installation and
+troubleshooting.
 
 #### Gemini CLI
 

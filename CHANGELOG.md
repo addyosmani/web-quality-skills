@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.1
+
+### Fixed
+
+- Package the Codex plugin from the repository root so its real `skills/` directory is included in the installed plugin cache.
+- Remove the cross-root `codex/skills` symlink that could produce a successful Codex install containing zero skills.
+- Document both required Codex CLI steps: registering the marketplace and installing the plugin.
+
+### Compatibility
+
+The six skill names, trigger phrases, and framework-agnostic behavior are unchanged. The patch release changes only Codex packaging and install metadata.
+
 ## 2.0.0
 
 Version 2 moves the skills from broad source-first advice to evidence-led audits.
