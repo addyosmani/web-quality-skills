@@ -1,6 +1,6 @@
 {
   "name": "web-quality-skills",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Measurement-first Agent Skills for Lighthouse, Chrome DevTools, Core Web Vitals, WCAG 2.2, SEO, and agentic browsing.",
   "author": {
     "name": "Addy Osmani",
@@ -13,6 +13,18 @@
   "interface": {
     "displayName": "Web Quality Skills",
     "shortDescription": "Measured Lighthouse, Core Web Vitals, accessibility, SEO, and agentic web quality.",
-    "category": "Productivity"
+    "longDescription": "Measurement-first workflows for auditing and improving performance, Core Web Vitals, WCAG 2.2 accessibility, SEO, browser best practices, and agentic browsing.",
+    "developerName": "Addy Osmani",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Audit this site for web quality issues.",
+      "Diagnose and improve Core Web Vitals.",
+      "Review accessibility, SEO, and best practices."
+    ]
   }
 }

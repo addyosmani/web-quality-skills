@@ -1,26 +1,32 @@
 # Using web-quality-skills with Codex
 
-This repository is also a [Codex plugin](https://developers.openai.com/codex/plugins/build). The same `skills/` directory used by Claude Code is consumed by Codex — no files are copied or duplicated.
+This repository is also a [Codex plugin](https://developers.openai.com/plugins/build/plugins). The same root-level `skills/` directory used by Claude Code is packaged directly for Codex — no files are copied or duplicated.
 
-## Install (one command)
+## Install
 
 ```bash
 codex plugin marketplace add addyosmani/web-quality-skills
+codex plugin add web-quality-skills@web-quality-skills
 ```
 
-> Requires Codex CLI v0.122 or later. On older releases the command was `codex marketplace add`. See the [Codex CLI docs](https://developers.openai.com/codex/cli).
+> Requires Codex CLI v0.142 or later. See the
+> [Codex CLI docs](https://developers.openai.com/codex/cli).
 
-Codex clones the repo into `~/.codex/plugins/web-quality-skills/`, registers the marketplace in `~/.codex/config.toml`, and makes the plugin available. Restart Codex if it's already running.
+The first command registers the Git marketplace. The second installs and enables the plugin from that marketplace. Start a new Codex session after installation so the bundled skills are discovered.
 
 Local clones work too:
 
 ```bash
 codex plugin marketplace add /path/to/your/clone
+codex plugin add web-quality-skills@web-quality-skills
 ```
 
 ## Usage
 
-After install, invoke a skill in Codex chat with `@` (e.g. `@performance`, `@accessibility`, `@core-web-vitals`) or just describe the task and let Codex pick the right skill. All 6 skills under `skills/` are available:
+After installation, invoke a namespaced skill with `$` (for example,
+`$web-quality-skills:performance`) or use `/skills` to select one. You can also
+describe the task and let Codex choose the appropriate skill. All 6 skills under
+`skills/` are available:
 
 - `web-quality-audit`
 - `performance`
@@ -37,18 +43,8 @@ Without those tools, the same skills fall back to Lighthouse CLI, PageSpeed Insi
 
 ## How it works
 
-- `codex/.codex-plugin/plugin.json` — Codex plugin manifest. Points `skills` at `./skills/`.
-- `codex/skills` — git-tracked symlink to `../skills` (9 bytes, mode `120000`). Keeps the plugin directory self-contained without duplicating skill content. macOS and Linux handle this natively.
-- `.agents/plugins/marketplace.json` — marketplace entry declaring the plugin at `./codex`. Codex requires plugins to live in a subdirectory of the marketplace root.
-- `skills/<name>/SKILL.md` — unchanged. Codex and Claude Code share the same `name` + `description` frontmatter format, so one file serves both platforms.
+- `.codex-plugin/plugin.json` — Codex plugin manifest at the repository root. Points `skills` at `./skills/`.
+- `.agents/plugins/marketplace.json` — marketplace entry declaring the repository root (`./`) as the plugin source.
+- `skills/<name>/SKILL.md` — shared unchanged by Codex and Claude Code. Both use the same `name` + `description` frontmatter format.
 
-## No symlinks (Windows or personal preference)
-
-If symlinks don't work on your machine, replace the symlink with a real copy of the skills inside the plugin directory. Run this from the repo root after cloning:
-
-```bash
-rm codex/skills
-cp -R skills codex/skills
-```
-
-This is a **local-only** change — don't commit it. The upstream repo keeps the symlink so `codex marketplace add addyosmani/web-quality-skills` stays a one-liner for everyone else.
+All manifest paths resolve inside the plugin root, so Codex can materialize the complete plugin without following cross-root symlinks.
