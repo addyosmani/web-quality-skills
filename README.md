@@ -74,7 +74,7 @@ Skills are then namespaced (e.g. `/web-quality-skills:performance`) and update w
 
 #### Codex
 
-Install directly via the Codex plugin marketplace (Codex CLI v0.131+):
+Install directly via the Codex plugin marketplace (Codex CLI v0.142+):
 
 ```bash
 codex plugin marketplace add addyosmani/web-quality-skills

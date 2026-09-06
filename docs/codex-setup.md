@@ -9,7 +9,7 @@ codex plugin marketplace add addyosmani/web-quality-skills
 codex plugin add web-quality-skills@web-quality-skills
 ```
 
-> Requires Codex CLI v0.131 or later. See the
+> Requires Codex CLI v0.142 or later. See the
 > [Codex CLI docs](https://developers.openai.com/codex/cli).
 
 The first command registers the Git marketplace. The second installs and enables the plugin from that marketplace. Start a new Codex session after installation so the bundled skills are discovered.
