@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- accessibility 2.0.1: use the WCAG large-text thresholds (18pt / 14pt bold, which is 24px / about 18.66px bold) in the contrast table. The old 18px / 14px bold values treated normal text as large and accepted 3:1 where 4.5:1 is required.
+- accessibility 2.0.1: make the target-size rule apply to checkbox and radio labels (`display: inline-block`), and define `errors` and `#error-summary` in the error-handling example so it runs and focuses the first invalid field.
+
 ## 2.0.0
 
 Version 2 moves the skills from broad source-first advice to evidence-led audits.

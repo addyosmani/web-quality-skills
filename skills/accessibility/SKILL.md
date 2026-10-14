@@ -4,7 +4,7 @@ description: Audit and improve web accessibility following WCAG 2.2 guidelines. 
 license: MIT
 metadata:
   author: web-quality-skills
-  version: "2.0"
+  version: "2.0.1"
 ---
 
 # Accessibility (a11y)
@@ -102,9 +102,11 @@ If the live tools are unavailable, use Lighthouse CLI or axe for automated cover
 
 | Text Size | AA minimum | AAA enhanced |
 |-----------|------------|--------------|
-| Normal text (< 18px / < 14px bold) | 4.5:1 | 7:1 |
-| Large text (≥ 18px / ≥ 14px bold) | 3:1 | 4.5:1 |
+| Normal text (< 24px / < 18.66px bold) | 4.5:1 | 7:1 |
+| Large text (≥ 24px / ≥ 18.66px bold) | 3:1 | 4.5:1 |
 | UI components & graphics | 3:1 | 3:1 |
+
+WCAG defines large text in points: at least 18pt, or 14pt bold. At 1pt = 1.333 CSS px, that is 24px, or about 18.66px bold.
 
 ```css
 /* ❌ Low contrast (2.5:1) */
@@ -245,9 +247,15 @@ Interactive targets must be at least **24 × 24 CSS pixels** (AA). Exceptions: i
 ```css
 /* ✅ Minimum target size */
 button,
-[role="button"],
+[role="button"] {
+  min-width: 24px;
+  min-height: 24px;
+}
+
+/* Labels are inline by default; min-width/min-height do not apply to inline boxes */
 input[type="checkbox"] + label,
 input[type="radio"] + label {
+  display: inline-block;
   min-width: 24px;
   min-height: 24px;
 }

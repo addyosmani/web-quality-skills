@@ -77,6 +77,7 @@ Announce errors to screen readers and focus the first invalid field on submit.
 
 ```html
 <form novalidate>
+  <div id="error-summary" role="alert"></div>
   <div class="field" aria-live="polite">
     <label for="email">Email</label>
     <input type="email" id="email"
@@ -91,15 +92,14 @@ Announce errors to screen readers and focus the first invalid field on submit.
 
 ```javascript
 form.addEventListener('submit', (e) => {
-  const firstError = form.querySelector('[aria-invalid="true"]');
-  if (firstError) {
+  const errors = form.querySelectorAll('[aria-invalid="true"]');
+  if (errors.length) {
     e.preventDefault();
-    firstError.focus();
 
     const errorSummary = document.getElementById('error-summary');
     errorSummary.textContent =
       `${errors.length} errors found. Please fix them and try again.`;
-    errorSummary.focus();
+    errors[0].focus();
   }
 });
 ```
