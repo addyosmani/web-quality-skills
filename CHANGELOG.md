@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- best-practices 2.0.1: show `Permissions-Policy` as an HTTP response header with double-quoted origins. Browsers ignore it in `<meta http-equiv>`, so the old example restricted nothing.
+- best-practices 2.0.1: in the security reference, mark the CSP nonce as a per-response random value, name the Trusted Types policy `app-html` so raw `innerHTML` strings are rejected as the comment says (a `default` policy would sanitize them instead), and say that `structuredClone` throws on functions rather than dropping them.
+
 ## 2.0.0
 
 Version 2 moves the skills from broad source-first advice to evidence-led audits.

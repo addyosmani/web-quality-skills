@@ -4,7 +4,7 @@ description: Apply modern web development best practices for security, compatibi
 license: MIT
 metadata:
   author: web-quality-skills
-  version: "2.0"
+  version: "2.0.1"
 ---
 
 # Best practices
@@ -419,15 +419,17 @@ findNearbyButton.addEventListener('click', async () => {
 
 ### Permissions policy
 
-```html
-<!-- Restrict powerful features -->
-<meta http-equiv="Permissions-Policy" 
-      content="geolocation=(), camera=(), microphone=()">
+Send `Permissions-Policy` as an HTTP response header. Browsers ignore it in `<meta http-equiv>`. Origins in the header are double-quoted strings.
 
-<!-- Or allow for specific origins -->
-<meta http-equiv="Permissions-Policy" 
-      content="geolocation=(self 'https://maps.example.com')">
 ```
+# Restrict powerful features
+Permissions-Policy: geolocation=(), camera=(), microphone=()
+
+# Or allow for specific origins
+Permissions-Policy: geolocation=(self "https://maps.example.com")
+```
+
+To delegate a feature to one embedded frame, use the iframe `allow` attribute (for example `<iframe src="https://maps.example.com" allow="geolocation">`).
 
 ---
 

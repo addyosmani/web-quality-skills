@@ -38,8 +38,8 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 ```
 Content-Security-Policy:
   default-src 'self';
-  script-src 'self' 'nonce-abc123' https://trusted.com;
-  style-src 'self' 'nonce-abc123';
+  script-src 'self' 'nonce-{RANDOM}' https://trusted.com;
+  style-src 'self' 'nonce-{RANDOM}';
   img-src 'self' data: https:;
   connect-src 'self' https://api.example.com;
   frame-ancestors 'self';
@@ -48,8 +48,11 @@ Content-Security-Policy:
 ```
 
 **Using nonces for inline scripts:**
+
+`{RANDOM}` is a placeholder. Generate a new cryptographically random nonce (at least 128 bits, base64-encoded) for every response, and put the same value in the header and in each `nonce` attribute. A fixed nonce lets any injected `<script nonce="...">` run.
+
 ```html
-<script nonce="abc123">
+<script nonce="{RANDOM}">
   // This inline script is allowed
 </script>
 ```
@@ -59,16 +62,17 @@ Content-Security-Policy:
 A strict CSP blocks loading untrusted *script files*, but it doesn't stop a string from reaching `innerHTML`, `eval`, or other DOM-XSS sinks. Trusted Types — Baseline across all major browsers since early 2026 — closes that hole by making sinks reject raw strings and accept only typed objects produced by a named policy.
 
 ```
-Content-Security-Policy: require-trusted-types-for 'script'; trusted-types default;
+Content-Security-Policy: require-trusted-types-for 'script'; trusted-types app-html;
 ```
 
 ```javascript
 // One central policy that does the sanitization
-const escape = trustedTypes.createPolicy('default', {
+const escape = trustedTypes.createPolicy('app-html', {
   createHTML: (s) => DOMPurify.sanitize(s, { RETURN_TRUSTED_TYPE: false })
 });
 
 // ❌ This now throws TypeError under enforcement
+// (a policy named 'default' would instead receive the string and sanitize it)
 element.innerHTML = userInput;
 
 // ✅ Goes through the policy
@@ -154,7 +158,9 @@ Object.assign(target, ...userInputs); // safe by itself (shallow), but unsafe
 const safe = Object.create(null);
 Object.assign(safe, userInput); // shallow, no recursion → safe by construction
 
-// ✅ For deep copies, structuredClone drops __proto__ and functions
+// ✅ For deep copies, structuredClone copies own data properties into plain
+//    objects (a __proto__ key stays an ordinary key). It throws DataCloneError
+//    on functions and DOM nodes.
 const deepSafe = structuredClone(userInput);
 
 // ✅ For deep merges, use a library that explicitly blocks dangerous keys
