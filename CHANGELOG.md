@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- seo 2.0.1: paginated pages now use a self-referencing canonical. Pointing pages 2..N at page 1 tells Google they are duplicates of page 1, against Google's pagination guidance. Drop the suggestion to rely on `rel="prev"` / `rel="next"`, which Google no longer uses.
+
 ## 2.0.0
 
 Version 2 moves the skills from broad source-first advice to evidence-led audits.

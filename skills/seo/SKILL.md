@@ -4,7 +4,7 @@ description: Optimize for search engine visibility and ranking. Use when asked t
 license: MIT
 metadata:
   author: web-quality-skills
-  version: "2.0"
+  version: "2.0.1"
 ---
 
 # SEO optimization
@@ -76,9 +76,9 @@ Sitemap: https://example.com/sitemap.xml
 <!-- Self-referencing canonical (recommended) -->
 <link rel="canonical" href="https://example.com/current-page">
 
-<!-- For paginated content -->
-<link rel="canonical" href="https://example.com/products">
-<!-- Or use rel="prev" / rel="next" for explicit pagination -->
+<!-- Paginated content: each page canonicalizes to itself, not to page 1 -->
+<link rel="canonical" href="https://example.com/products?page=2">
+<!-- Google no longer uses rel="prev" / rel="next" (other search engines may) -->
 ```
 
 ### XML sitemap
