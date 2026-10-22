@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- web-quality-audit 2.0.1: align the LCP, INP, and CLS good thresholds with their inclusive boundaries; exact threshold values were incorrectly excluded by strict `<` wording.
+
 ## 2.0.0
 
 Version 2 moves the skills from broad source-first advice to evidence-led audits.

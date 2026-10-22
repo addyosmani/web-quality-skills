@@ -4,7 +4,7 @@ description: Run an evidence-led web quality audit covering performance, accessi
 license: MIT
 metadata:
   author: web-quality-skills
-  version: "2.0"
+  version: "2.0.1"
 ---
 
 # Web quality audit
@@ -40,9 +40,9 @@ Chrome DevTools MCP's `lighthouse_audit` intentionally excludes performance. Its
 ### Performance
 
 **Core Web Vitals** — Must pass for good page experience:
-* **LCP (Largest Contentful Paint) < 2.5s.** The largest visible element must render quickly. Optimize images, fonts, and server response time.
-* **INP (Interaction to Next Paint) < 200ms.** User interactions must feel instant. Reduce JavaScript execution time and break up long tasks.
-* **CLS (Cumulative Layout Shift) < 0.1.** Content must not jump around. Set explicit dimensions on images, embeds, and ads.
+* **LCP (Largest Contentful Paint) ≤ 2.5s.** The largest visible element must render quickly. Optimize images, fonts, and server response time.
+* **INP (Interaction to Next Paint) ≤ 200ms.** User interactions must feel instant. Reduce JavaScript execution time and break up long tasks.
+* **CLS (Cumulative Layout Shift) ≤ 0.1.** Content must not jump around. Set explicit dimensions on images, embeds, and ads.
 
 **Resource Optimization:**
 * **Compress images.** Use WebP/AVIF with fallbacks. Serve correctly sized images via `srcset`.
