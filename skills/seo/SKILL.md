@@ -4,7 +4,7 @@ description: Optimize for search engine visibility and ranking. Use when asked t
 license: MIT
 metadata:
   author: web-quality-skills
-  version: "2.0"
+  version: "2.0.1"
 ---
 
 # SEO optimization
@@ -176,7 +176,7 @@ Treat title-link rewriting separately from truncation. Google may build a differ
 <meta name="description" content="">
 
 <!-- ✅ Compelling and unique -->
-<meta name="description" content="Shop premium blue widgets with free shipping. 30-day returns. Rated 4.9/5 by 10,000+ customers. Order today and save 20%.">
+<meta name="description" content="Shop premium blue widgets with free shipping and 30-day returns. Compare sizes, finishes and prices side by side, then order online today.">
 ```
 
 **Meta description guidelines:**
@@ -185,6 +185,7 @@ Treat title-link rewriting separately from truncation. Google may build a differ
 - Compelling call-to-action
 - Unique for every page
 - Matches page content
+- States only ratings, review counts, prices or discounts the page itself shows
 
 ### Heading structure
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.1
+
+### Changed
+
+- `seo`: the ✅ meta description example no longer claims "Rated 4.9/5 by 10,000+ customers" or a 20% discount. An agent that copies the example's pattern may put a rating, a review count or an offer into pages that show none. The example keeps the page's own facts (shipping, returns, what you can compare), and the guidelines add one line: state only ratings, review counts, prices or discounts the page itself shows.
+
 ## 2.0.0
 
 Version 2 moves the skills from broad source-first advice to evidence-led audits.
